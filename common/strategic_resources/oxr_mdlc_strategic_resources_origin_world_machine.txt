@@ -3,7 +3,8 @@
 oxr_mdlc_world_machine_core = {
 	tradable = no
 	category = rare
-	max = 10
+	max = 0
+	special_max_amount = yes
 
 	ai_weight = {
 		weight = 1

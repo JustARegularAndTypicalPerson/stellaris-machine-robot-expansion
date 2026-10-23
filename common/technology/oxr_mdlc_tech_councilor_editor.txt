@@ -68,10 +68,6 @@ oxr_mdlc_tech_councilor_editing_2 = {
 	weight_modifier = {
 		factor = 0.75
 		modifier = {
-			factor = @ap_technological_ascendancy_rare_tech
-			has_ascension_perk = ap_technological_ascendancy
-		}
-		modifier = {
 			factor = @federation_perk_factor
 			has_federation = yes
 			federation = {

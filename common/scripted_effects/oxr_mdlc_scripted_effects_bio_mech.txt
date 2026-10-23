@@ -16,6 +16,15 @@ oxr_mdlc_planet_calc_monthly_bio_mech_pops_add = {
 		which = xvcv_mdlc_bio_robot_growth_progress_var_from_organics
 		value = 0
 	}
+	# Reset contributions so removed bonuses disappear from the UI
+	set_variable = {
+		which = xvcv_mdlc_bio_robot_growth_progress_var_from_assembly
+		value = 0
+	}
+	set_variable = {
+		which = xvcv_mdlc_bio_robot_growth_mult_var_display
+		value = 0
+	}
 	# 3 + whatever amount of modifier has been added
 	change_variable = {
 		which = xvcv_mdlc_bio_robot_growth_rate_per_month_var 
@@ -84,10 +93,16 @@ oxr_mdlc_planet_calc_monthly_bio_mech_pops_add = {
 				modifier = planet_pop_assembly_mult
 				variable = planet_pop_assembly_mult_var
 			}
+			# Add 1 to convert the assembly bonus to a multiplier
+			change_variable = {
+				which = planet_pop_assembly_mult_var
+				value = 1
+			}
 			multiply_variable = {
 				which = xvcv_mdlc_bio_robot_growth_progress_var_from_assembly
 				value = planet_pop_assembly_mult_var
 			}
+			clear_variable = planet_pop_assembly_mult_var
 		}
 		# If the pop assembly was multiplied, divide that total amount by 4 (to get 25% of it)
 		divide_variable = {

@@ -80,7 +80,7 @@ country_event = {
 		from = {
 			if = {
 				limit = { 
-					ruler = {
+					root.ruler = {
 						has_total_skill = 1
 					}
 				}
@@ -88,7 +88,7 @@ country_event = {
 			}
 			else_if = {
 				limit = { 
-					ruler = {
+					root.ruler = {
 						has_total_skill = 2
 					}
 				}
@@ -97,7 +97,7 @@ country_event = {
 			}
 			else_if = {
 				limit = { 
-					ruler = {
+					root.ruler = {
 						has_total_skill = 3
 					}
 				}
@@ -106,7 +106,7 @@ country_event = {
 			}
 			else_if = {
 				limit = { 
-					ruler = {
+					root.ruler = {
 						has_total_skill = 4
 					}
 				}
@@ -115,7 +115,7 @@ country_event = {
 			}
 			else_if = {
 				limit = { 
-					ruler = {
+					root.ruler = {
 						has_total_skill = 5
 					}
 				}
@@ -124,7 +124,7 @@ country_event = {
 			}
 			else_if = {
 				limit = { 
-					ruler = {
+					root.ruler = {
 						has_total_skill = 6
 					}
 				}
@@ -133,7 +133,7 @@ country_event = {
 			}
 			else_if = {
 				limit = { 
-					ruler = {
+					root.ruler = {
 						has_total_skill = 7
 					}
 				}
@@ -142,7 +142,7 @@ country_event = {
 			}
 			else_if = {
 				limit = { 
-					ruler = {
+					root.ruler = {
 						has_total_skill = 8
 					}
 				}
@@ -151,7 +151,7 @@ country_event = {
 			}
 			else_if = {
 				limit = { 
-					ruler = {
+					root.ruler = {
 						has_total_skill = 9
 					}
 				}
@@ -160,7 +160,7 @@ country_event = {
 			}
 			else_if = {
 				limit = { 
-					ruler = {
+					root.ruler = {
 						has_total_skill > 9
 					}
 				}

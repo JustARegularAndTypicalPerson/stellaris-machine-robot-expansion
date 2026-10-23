@@ -1664,9 +1664,6 @@ country_event = {
 	trigger = {
 		# has_completed_special_project_in_log = XVCV_MDLC_AP_BIO_ROBOT_PROJECT
 		oxr_mdlc_country_is_finished_bio_mech = yes
-	}
-
-	trigger = {
 		is_ai = no
 		any_owned_species = { has_trait = xvcv_mdlc_trait_bio_robot }
 		any_owned_colony = { xvcv_mdlc_bio_robot_auto_growth_possible_planet_trigger = yes }
@@ -1709,9 +1706,6 @@ country_event = {
 
 	trigger = {
 		has_completed_special_project_in_log = XVCV_MDLC_AP_BIO_ROBOT_PROJECT
-	}
-
-	trigger = {
 		is_ai = no
 		any_owned_colony = {
 			is_variable_set = xvcv_mdlc_bio_robot_growth_progress_var
@@ -1751,9 +1745,6 @@ country_event = {
 
 	trigger = {
 		has_completed_special_project_in_log = XVCV_MDLC_AP_BIO_ROBOT_PROJECT
-	}
-
-	trigger = {
 		from = {
 			OR = {
 				#when the trait is 'added'

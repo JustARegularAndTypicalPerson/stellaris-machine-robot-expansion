@@ -130,30 +130,39 @@ rikk_mdlc_rw_upgrade_calculator = {
 		}
 		#log = "upgrades = \\[This.rikk_mdlc_rw_upgrade_counter]"
 		#log = "habitables = \\[This.rikk_mdlc_rw_habitable_counter]"
-		multiply_variable = { which = rikk_mdlc_rw_upgrade_counter value = 0.66 }
-		divide_variable = { which = rikk_mdlc_rw_upgrade_counter value = rikk_mdlc_rw_habitable_counter }
-		round_variable = rikk_mdlc_rw_upgrade_counter
-		change_variable = { which = rikk_mdlc_rw_upgrade_counter value = $SIZE$ }
-		#log = "final calc = \\[This.rikk_mdlc_rw_upgrade_counter]"
-		change_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = rikk_mdlc_rw_upgrade_counter }
-		subtract_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = $SIZE$ }
-		divide_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = 100 }
-		every_system_planet = {
+		# The last habitable ring segment may have been removed by the triggering on-action.
+		if = {
 			limit = {
-				rikk_mdlc_rw_upgrade_is_$LIMIT$ = yes
-				OR = {
-					#is_ringworld = yes #this will also count seams and tech sections I think
-					is_planet_class = pc_ringworld_habitable
-					is_planet_class = xvcv_mdlc_pc_machine_ring
-					giga_is_ringworld = yes
+				check_variable = {
+					which = rikk_mdlc_rw_habitable_counter
+					value > 0
 				}
 			}
-			remove_modifier = rikk_mdlc_rw_upgrade_modifier
-			add_modifier = { modifier = rikk_mdlc_rw_upgrade_modifier mult = solar_system.rikk_mdlc_rw_upgrade_counter_hundred }
-			set_planet_size = 0
-			while = {
-				count = solar_system.rikk_mdlc_rw_upgrade_counter
-				change_planet_size = 1
+			multiply_variable = { which = rikk_mdlc_rw_upgrade_counter value = 0.66 }
+			divide_variable = { which = rikk_mdlc_rw_upgrade_counter value = rikk_mdlc_rw_habitable_counter }
+			round_variable = rikk_mdlc_rw_upgrade_counter
+			change_variable = { which = rikk_mdlc_rw_upgrade_counter value = $SIZE$ }
+			#log = "final calc = \\[This.rikk_mdlc_rw_upgrade_counter]"
+			change_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = rikk_mdlc_rw_upgrade_counter }
+			subtract_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = $SIZE$ }
+			divide_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = 100 }
+			every_system_planet = {
+				limit = {
+					rikk_mdlc_rw_upgrade_is_$LIMIT$ = yes
+					OR = {
+						#is_ringworld = yes #this will also count seams and tech sections I think
+						is_planet_class = pc_ringworld_habitable
+						is_planet_class = xvcv_mdlc_pc_machine_ring
+						giga_is_ringworld = yes
+					}
+				}
+				remove_modifier = rikk_mdlc_rw_upgrade_modifier
+				add_modifier = { modifier = rikk_mdlc_rw_upgrade_modifier mult = solar_system.rikk_mdlc_rw_upgrade_counter_hundred }
+				set_planet_size = 0
+				while = {
+					count = solar_system.rikk_mdlc_rw_upgrade_counter
+					change_planet_size = 1
+				}
 			}
 		}
 		clear_variable = rikk_mdlc_rw_upgrade_counter

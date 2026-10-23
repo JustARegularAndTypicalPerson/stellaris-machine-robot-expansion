@@ -213,7 +213,7 @@ country_event = {
 	option = {
 		name = rikk_mdlc_encrypted.207.c
 		add_modifier = {
-			modifier = rikk_mdlc_encrypted_prod_reward_mod
+			modifier = rikk_mdlc_encrypted_scrap_reward_mod
 			days = 360
 		}
 		hidden_effect = {
@@ -278,7 +278,7 @@ country_event = {
 	option = {
 		name = rikk_mdlc_encrypted.209.c
 		add_modifier = {
-			modifier = rikk_mdlc_encrypted_prod_reward_mod
+			modifier = rikk_mdlc_encrypted_scrap_reward_mod
 			days = 360
 		}
 		hidden_effect = {
@@ -343,7 +343,7 @@ country_event = {
 	option = {
 		name = rikk_mdlc_encrypted.210.c
 		add_modifier = {
-			modifier = rikk_mdlc_encrypted_prod_reward_mod
+			modifier = rikk_mdlc_encrypted_scrap_reward_mod
 			days = 360
 		}
 		hidden_effect = {

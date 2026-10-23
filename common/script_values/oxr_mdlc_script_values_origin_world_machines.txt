@@ -19,10 +19,11 @@ oxr_mdlc_planet_count_max_possible_district_armies = {
 		parameters = { type = any }
 		mode = add
 	}
+	mult = owner.oxr_mdlc_world_machine_defense_armies_per_district
 }
 oxr_mdlc_planet_count_built_districts = {
 	complex_trigger_modifier = {
-		trigger = num_free_districts
+		trigger = num_districts
 		parameters = {
 			type = any
 		}
@@ -31,7 +32,7 @@ oxr_mdlc_planet_count_built_districts = {
 }
 oxr_mdlc_planet_count_free_districts = {
 	complex_trigger_modifier = {
-		trigger = num_districts
+		trigger = num_free_districts
 		parameters = {
 			type = any
 		}
@@ -44,6 +45,7 @@ oxr_mdlc_planet_count_free_districts = {
 oxr_mdlc_planet_num_district_armies_to_refill = {
 	base = value:oxr_mdlc_planet_count_max_possible_district_armies
 	subtract = value:oxr_mdlc_planet_count_district_defense_armies
+	min = 0
 }
 
 # TODO: Code these to use planet vars and set up triggers to update the vars on_actions
@@ -134,8 +136,8 @@ oxr_mdlc_num_world_machines = {
 				OR = {
 					is_xvcv_mdlc_pc_machine_auto = yes
 					is_planet_class = xvcv_mdlc_pc_machine_ecu
-					is_planet_class = xvcv_mdlc_pc_machine_ecu
-					is_planet_class = xvcv_mdlc_pc_machine_ecu
+					is_planet_class = xvcv_mdlc_pc_machine_cpu
+					is_planet_class = xvcv_mdlc_pc_machine_ser
 					is_planet_class = xvcv_mdlc_pc_machine_ring
 				}
 			}
