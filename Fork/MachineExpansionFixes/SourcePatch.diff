@@ -1,0 +1,528 @@
+--- a/common/component_templates/xvcv_mdlc_utilities_templates.txt
++++ b/common/component_templates/xvcv_mdlc_utilities_templates.txt
+@@ -12,8 +12,8 @@
+ 			alloys = @shield_s_t7_cost
+ 		}
+ 		upkeep = {
+-			energy = @shield_s_t7_upkeep_energy
+-			alloys = @shield_s_t7_upkeep_alloys
++			energy = @defense_s_t7_upkeep_energy
++			alloys = @defense_s_t7_upkeep_alloys
+ 		}
+ 	}
+ 	modifier = {
+@@ -55,8 +55,8 @@
+ 			alloys = @shield_m_t7_cost
+ 		}
+ 		upkeep = {
+-			energy = @shield_m_t7_upkeep_energy
+-			alloys = @shield_m_t7_upkeep_alloys
++			energy = @defense_m_t7_upkeep_energy
++			alloys = @defense_m_t7_upkeep_alloys
+ 		}
+ 	}
+ 	modifier = {
+@@ -98,8 +98,8 @@
+ 			alloys = @shield_l_t7_cost
+ 		}
+ 		upkeep = {
+-			energy = @shield_l_t7_upkeep_energy
+-			alloys = @shield_l_t7_upkeep_alloys
++			energy = @defense_l_t7_upkeep_energy
++			alloys = @defense_l_t7_upkeep_alloys
+ 		}
+ 	}
+ 	modifier = {
+@@ -141,8 +141,8 @@
+ 			alloys = @shield_s_t6_cost
+ 		}
+ 		upkeep = {
+-			energy = @shield_s_t6_upkeep_energy
+-			alloys = @shield_s_t6_upkeep_alloys
++			energy = @defense_s_t6_upkeep_energy
++			alloys = @defense_s_t6_upkeep_alloys
+ 		}
+ 	}
+ 	modifier = {
+@@ -173,8 +173,8 @@
+ 			alloys = @shield_m_t6_cost
+ 		}
+ 		upkeep = {
+-			energy = @shield_m_t6_upkeep_energy
+-			alloys = @shield_m_t6_upkeep_alloys
++			energy = @defense_m_t6_upkeep_energy
++			alloys = @defense_m_t6_upkeep_alloys
+ 		}
+ 	}
+ 	modifier = {
+@@ -205,8 +205,8 @@
+ 			alloys = @shield_l_t6_cost
+ 		}
+ 		upkeep = {
+-			energy = @shield_l_t6_upkeep_energy
+-			alloys = @shield_l_t6_upkeep_alloys
++			energy = @defense_l_t6_upkeep_energy
++			alloys = @defense_l_t6_upkeep_alloys
+ 		}
+ 	}
+ 	modifier = {
+--- a/common/on_actions/oxr_mdlc_on_actions_origin_world_machine.txt
++++ b/common/on_actions/oxr_mdlc_on_actions_origin_world_machine.txt
+@@ -25,6 +25,7 @@
+ on_world_machine_insight_blocker_cleared = {
+ 	# Contribute towards unlocking world machine core using planetary blocker-clearing interface
+ 	events = {
++		oxr_mdlc_on_world_machine_action.1003  # points towards insight situation
+ 		oxr_mdlc_on_world_machine_action.110  # increment insights counter
+ 	}
+ }
+@@ -67,7 +68,7 @@
+ }
+ on_world_machine_district_completed_country = {
+ 	events = {
+-		oxr_mdlc_on_world_machine_action.1005  # country: Record situation points
++		oxr_mdlc_on_world_machine_action.1006  # country: Record situation points
+ 	}
+ }
+ on_world_machine_district_demolished = {
+--- a/common/script_values/oxr_mdlc_script_values_origin_world_machines.txt
++++ b/common/script_values/oxr_mdlc_script_values_origin_world_machines.txt
+@@ -19,10 +19,11 @@
+ 		parameters = { type = any }
+ 		mode = add
+ 	}
++	mult = owner.oxr_mdlc_world_machine_defense_armies_per_district
+ }
+ oxr_mdlc_planet_count_built_districts = {
+ 	complex_trigger_modifier = {
+-		trigger = num_free_districts
++		trigger = num_districts
+ 		parameters = {
+ 			type = any
+ 		}
+@@ -31,7 +32,7 @@
+ }
+ oxr_mdlc_planet_count_free_districts = {
+ 	complex_trigger_modifier = {
+-		trigger = num_districts
++		trigger = num_free_districts
+ 		parameters = {
+ 			type = any
+ 		}
+@@ -44,6 +45,7 @@
+ oxr_mdlc_planet_num_district_armies_to_refill = {
+ 	base = value:oxr_mdlc_planet_count_max_possible_district_armies
+ 	subtract = value:oxr_mdlc_planet_count_district_defense_armies
++	min = 0
+ }
+ 
+ # TODO: Code these to use planet vars and set up triggers to update the vars on_actions
+@@ -134,8 +136,8 @@
+ 				OR = {
+ 					is_xvcv_mdlc_pc_machine_auto = yes
+ 					is_planet_class = xvcv_mdlc_pc_machine_ecu
+-					is_planet_class = xvcv_mdlc_pc_machine_ecu
+-					is_planet_class = xvcv_mdlc_pc_machine_ecu
++					is_planet_class = xvcv_mdlc_pc_machine_cpu
++					is_planet_class = xvcv_mdlc_pc_machine_ser
+ 					is_planet_class = xvcv_mdlc_pc_machine_ring
+ 				}
+ 			}
+--- a/common/script_values/oxr_mdlc_script_values_utils.txt
++++ b/common/script_values/oxr_mdlc_script_values_utils.txt
+@@ -36,8 +36,10 @@
+ 	base = 0
+ 	complex_trigger_modifier = {
+ 		trigger = count_owned_pop_amount
+-		limit = {
+-			has_trait = $TRAIT$
++		parameters = {
++			limit = {
++				has_trait = $TRAIT$
++			}
+ 		}
+ 		mode = add
+ 	}
+@@ -49,8 +51,10 @@
+ 	base = 0
+ 	complex_trigger_modifier = {
+ 		trigger = count_owned_pop_amount
+-		limit = {
+-			has_trait = $TRAIT$
++		parameters = {
++			limit = {
++				has_trait = $TRAIT$
++			}
+ 		}
+ 		mode = add
+ 	}
+--- a/common/scripted_effects/oxr_mdlc_scripted_effects_bio_mech.txt
++++ b/common/scripted_effects/oxr_mdlc_scripted_effects_bio_mech.txt
+@@ -14,6 +14,15 @@
+ 	# Reset this variable each month, so its value doesn't skyrocket
+ 	set_variable = {
+ 		which = xvcv_mdlc_bio_robot_growth_progress_var_from_organics
++		value = 0
++	}
++	# Reset contributions so removed bonuses disappear from the UI
++	set_variable = {
++		which = xvcv_mdlc_bio_robot_growth_progress_var_from_assembly
++		value = 0
++	}
++	set_variable = {
++		which = xvcv_mdlc_bio_robot_growth_mult_var_display
+ 		value = 0
+ 	}
+ 	# 3 + whatever amount of modifier has been added
+@@ -84,10 +93,16 @@
+ 				modifier = planet_pop_assembly_mult
+ 				variable = planet_pop_assembly_mult_var
+ 			}
++			# Add 1 to convert the assembly bonus to a multiplier
++			change_variable = {
++				which = planet_pop_assembly_mult_var
++				value = 1
++			}
+ 			multiply_variable = {
+ 				which = xvcv_mdlc_bio_robot_growth_progress_var_from_assembly
+ 				value = planet_pop_assembly_mult_var
+ 			}
++			clear_variable = planet_pop_assembly_mult_var
+ 		}
+ 		# If the pop assembly was multiplied, divide that total amount by 4 (to get 25% of it)
+ 		divide_variable = {
+--- a/common/scripted_effects/rikk_mdlc_scripted_effects.txt
++++ b/common/scripted_effects/rikk_mdlc_scripted_effects.txt
+@@ -130,30 +130,39 @@
+ 		}
+ 		#log = "upgrades = \\[This.rikk_mdlc_rw_upgrade_counter]"
+ 		#log = "habitables = \\[This.rikk_mdlc_rw_habitable_counter]"
+-		multiply_variable = { which = rikk_mdlc_rw_upgrade_counter value = 0.66 }
+-		divide_variable = { which = rikk_mdlc_rw_upgrade_counter value = rikk_mdlc_rw_habitable_counter }
+-		round_variable = rikk_mdlc_rw_upgrade_counter
+-		change_variable = { which = rikk_mdlc_rw_upgrade_counter value = $SIZE$ }
+-		#log = "final calc = \\[This.rikk_mdlc_rw_upgrade_counter]"
+-		change_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = rikk_mdlc_rw_upgrade_counter }
+-		subtract_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = $SIZE$ }
+-		divide_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = 100 }
+-		every_system_planet = {
++		# The last habitable ring segment may have been removed by the triggering on-action.
++		if = {
+ 			limit = {
+-				rikk_mdlc_rw_upgrade_is_$LIMIT$ = yes
+-				OR = {
+-					#is_ringworld = yes #this will also count seams and tech sections I think
+-					is_planet_class = pc_ringworld_habitable
+-					is_planet_class = xvcv_mdlc_pc_machine_ring
+-					giga_is_ringworld = yes
++				check_variable = {
++					which = rikk_mdlc_rw_habitable_counter
++					value > 0
+ 				}
+ 			}
+-			remove_modifier = rikk_mdlc_rw_upgrade_modifier
+-			add_modifier = { modifier = rikk_mdlc_rw_upgrade_modifier mult = solar_system.rikk_mdlc_rw_upgrade_counter_hundred }
+-			set_planet_size = 0
+-			while = {
+-				count = solar_system.rikk_mdlc_rw_upgrade_counter
+-				change_planet_size = 1
++			multiply_variable = { which = rikk_mdlc_rw_upgrade_counter value = 0.66 }
++			divide_variable = { which = rikk_mdlc_rw_upgrade_counter value = rikk_mdlc_rw_habitable_counter }
++			round_variable = rikk_mdlc_rw_upgrade_counter
++			change_variable = { which = rikk_mdlc_rw_upgrade_counter value = $SIZE$ }
++			#log = "final calc = \\[This.rikk_mdlc_rw_upgrade_counter]"
++			change_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = rikk_mdlc_rw_upgrade_counter }
++			subtract_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = $SIZE$ }
++			divide_variable = { which = rikk_mdlc_rw_upgrade_counter_hundred value = 100 }
++			every_system_planet = {
++				limit = {
++					rikk_mdlc_rw_upgrade_is_$LIMIT$ = yes
++					OR = {
++						#is_ringworld = yes #this will also count seams and tech sections I think
++						is_planet_class = pc_ringworld_habitable
++						is_planet_class = xvcv_mdlc_pc_machine_ring
++						giga_is_ringworld = yes
++					}
++				}
++				remove_modifier = rikk_mdlc_rw_upgrade_modifier
++				add_modifier = { modifier = rikk_mdlc_rw_upgrade_modifier mult = solar_system.rikk_mdlc_rw_upgrade_counter_hundred }
++				set_planet_size = 0
++				while = {
++					count = solar_system.rikk_mdlc_rw_upgrade_counter
++					change_planet_size = 1
++				}
+ 			}
+ 		}
+ 		clear_variable = rikk_mdlc_rw_upgrade_counter
+@@ -175,4 +184,4 @@
+ 			inline_script = country/messages/rikk_mdlc_upgrade_message_failed
+ 		}
+ 	}
+-}+}
+--- a/common/strategic_resources/oxr_mdlc_strategic_resources_origin_world_machine.txt
++++ b/common/strategic_resources/oxr_mdlc_strategic_resources_origin_world_machine.txt
+@@ -3,7 +3,8 @@
+ oxr_mdlc_world_machine_core = {
+ 	tradable = no
+ 	category = rare
+-	max = 10
++	max = 0
++	special_max_amount = yes
+ 
+ 	ai_weight = {
+ 		weight = 1
+--- a/common/technology/oxr_mdlc_tech_councilor_editor.txt
++++ b/common/technology/oxr_mdlc_tech_councilor_editor.txt
+@@ -68,10 +68,6 @@
+ 	weight_modifier = {
+ 		factor = 0.75
+ 		modifier = {
+-			factor = @ap_technological_ascendancy_rare_tech
+-			has_ascension_perk = ap_technological_ascendancy
+-		}
+-		modifier = {
+ 			factor = @federation_perk_factor
+ 			has_federation = yes
+ 			federation = {
+--- a/common/technology/xvcv_mdlc_tech.txt
++++ b/common/technology/xvcv_mdlc_tech.txt
+@@ -120,10 +120,6 @@
+ 
+ 	weight_modifier = {
+ 		factor = 0.75
+-		modifier = {
+-			factor = @ap_technological_ascendancy_rare_tech
+-			has_ascension_perk = ap_technological_ascendancy
+-		}
+ 		modifier = {
+ 			factor = @federation_perk_factor
+ 			has_federation = yes
+@@ -157,10 +153,6 @@
+ 
+ 	weight_modifier = {
+ 		modifier = {
+-			factor = @ap_technological_ascendancy_rare_tech
+-			has_ascension_perk = ap_technological_ascendancy
+-		}
+-		modifier = {
+ 			factor = @federation_perk_factor
+ 			has_federation = yes
+ 			federation = {
+--- a/common/technology/xvcv_mdlc_tech_customgui.txt
++++ b/common/technology/xvcv_mdlc_tech_customgui.txt
+@@ -50,10 +50,6 @@
+ 
+ 	weight_modifier = {
+ 		factor = 0.75
+-		modifier = {
+-			factor = @ap_technological_ascendancy_rare_tech
+-			has_ascension_perk = ap_technological_ascendancy
+-		}
+ 		modifier = {
+ 			factor = @federation_perk_factor
+ 			has_federation = yes
+@@ -157,10 +153,6 @@
+ 	weight_modifier = {
+ 		factor = 0.75
+ 		modifier = {
+-			factor = @ap_technological_ascendancy_rare_tech
+-			has_ascension_perk = ap_technological_ascendancy
+-		}
+-		modifier = {
+ 			factor = @federation_perk_factor
+ 			has_federation = yes
+ 			federation = {
+--- a/common/technology/xvcv_mdlc_technology_abyss.txt
++++ b/common/technology/xvcv_mdlc_technology_abyss.txt
+@@ -136,10 +136,6 @@
+ 	}
+ 
+ 	weight_modifier = {
+-		modifier = {
+-			factor = @ap_technological_ascendancy_rare_tech
+-			has_ascension_perk = ap_technological_ascendancy
+-		}
+ 		modifier = {
+ 			factor = @federation_perk_factor
+ 			has_federation = yes
+--- a/events/oxr_mdlc_events_origin_world_machine_main.txt
++++ b/events/oxr_mdlc_events_origin_world_machine_main.txt
+@@ -87,6 +87,8 @@
+ 	immediate = {
+ 		log = "oxr_mdlc_origin_wm_main.10 was entered"
+ 		owner = {
++			# Award insight progress when the ruined World Machine anomaly is resolved.
++			fire_on_action = { on_action = on_world_machine_ruined_planet_discovered }
+ 			enable_special_project = {
+ 				name = OXR_MDLC_ORIGIN_WM_INFO_RUINED_WM_FOUND
+ 			}
+@@ -929,7 +931,7 @@
+ 				limit = {
+ 					check_variable = {
+ 						which = oxr_mdlc_planet_world_machine_core_countdown
+-						value < 1
++						value <= 0
+ 					}
+ 				}
+ 				# Manufacturing is complete!
+@@ -1131,6 +1133,7 @@
+ 				has_country_flag = oxr_mdlc_origin_world_machine_t3_ecu_sr_target_met
+ 				has_country_flag = oxr_mdlc_origin_world_machine_t3_ecu_naval_cap_target_met
+ 				NOT = { has_special_project = OXR_MDLC_ORIGIN_WM_T3_ECU_WORLD }
++				NOT = { has_technology = oxr_mdlc_tech_world_machine_ecu }
+ 			}
+ 			# throw up an event that says "hey we have data, now let's datamine/compile it"
+ 			# then show project
+--- a/events/rikk_mdlc_events_encrypted.txt
++++ b/events/rikk_mdlc_events_encrypted.txt
+@@ -213,7 +213,7 @@
+ 	option = {
+ 		name = rikk_mdlc_encrypted.207.c
+ 		add_modifier = {
+-			modifier = rikk_mdlc_encrypted_prod_reward_mod
++			modifier = rikk_mdlc_encrypted_scrap_reward_mod
+ 			days = 360
+ 		}
+ 		hidden_effect = {
+@@ -278,7 +278,7 @@
+ 	option = {
+ 		name = rikk_mdlc_encrypted.209.c
+ 		add_modifier = {
+-			modifier = rikk_mdlc_encrypted_prod_reward_mod
++			modifier = rikk_mdlc_encrypted_scrap_reward_mod
+ 			days = 360
+ 		}
+ 		hidden_effect = {
+@@ -343,7 +343,7 @@
+ 	option = {
+ 		name = rikk_mdlc_encrypted.210.c
+ 		add_modifier = {
+-			modifier = rikk_mdlc_encrypted_prod_reward_mod
++			modifier = rikk_mdlc_encrypted_scrap_reward_mod
+ 			days = 360
+ 		}
+ 		hidden_effect = {
+--- a/events/rikk_mdlc_events_extended.txt
++++ b/events/rikk_mdlc_events_extended.txt
+@@ -80,7 +80,7 @@
+ 		from = {
+ 			if = {
+ 				limit = { 
+-					ruler = {
++					root.ruler = {
+ 						has_total_skill = 1
+ 					}
+ 				}
+@@ -88,7 +88,7 @@
+ 			}
+ 			else_if = {
+ 				limit = { 
+-					ruler = {
++					root.ruler = {
+ 						has_total_skill = 2
+ 					}
+ 				}
+@@ -97,7 +97,7 @@
+ 			}
+ 			else_if = {
+ 				limit = { 
+-					ruler = {
++					root.ruler = {
+ 						has_total_skill = 3
+ 					}
+ 				}
+@@ -106,7 +106,7 @@
+ 			}
+ 			else_if = {
+ 				limit = { 
+-					ruler = {
++					root.ruler = {
+ 						has_total_skill = 4
+ 					}
+ 				}
+@@ -115,7 +115,7 @@
+ 			}
+ 			else_if = {
+ 				limit = { 
+-					ruler = {
++					root.ruler = {
+ 						has_total_skill = 5
+ 					}
+ 				}
+@@ -124,7 +124,7 @@
+ 			}
+ 			else_if = {
+ 				limit = { 
+-					ruler = {
++					root.ruler = {
+ 						has_total_skill = 6
+ 					}
+ 				}
+@@ -133,7 +133,7 @@
+ 			}
+ 			else_if = {
+ 				limit = { 
+-					ruler = {
++					root.ruler = {
+ 						has_total_skill = 7
+ 					}
+ 				}
+@@ -142,7 +142,7 @@
+ 			}
+ 			else_if = {
+ 				limit = { 
+-					ruler = {
++					root.ruler = {
+ 						has_total_skill = 8
+ 					}
+ 				}
+@@ -151,7 +151,7 @@
+ 			}
+ 			else_if = {
+ 				limit = { 
+-					ruler = {
++					root.ruler = {
+ 						has_total_skill = 9
+ 					}
+ 				}
+@@ -160,7 +160,7 @@
+ 			}
+ 			else_if = {
+ 				limit = { 
+-					ruler = {
++					root.ruler = {
+ 						has_total_skill > 9
+ 					}
+ 				}
+--- a/events/xvcv_mdlc_events_main.txt
++++ b/events/xvcv_mdlc_events_main.txt
+@@ -1664,9 +1664,6 @@
+ 	trigger = {
+ 		# has_completed_special_project_in_log = XVCV_MDLC_AP_BIO_ROBOT_PROJECT
+ 		oxr_mdlc_country_is_finished_bio_mech = yes
+-	}
+-
+-	trigger = {
+ 		is_ai = no
+ 		any_owned_species = { has_trait = xvcv_mdlc_trait_bio_robot }
+ 		any_owned_colony = { xvcv_mdlc_bio_robot_auto_growth_possible_planet_trigger = yes }
+@@ -1709,9 +1706,6 @@
+ 
+ 	trigger = {
+ 		has_completed_special_project_in_log = XVCV_MDLC_AP_BIO_ROBOT_PROJECT
+-	}
+-
+-	trigger = {
+ 		is_ai = no
+ 		any_owned_colony = {
+ 			is_variable_set = xvcv_mdlc_bio_robot_growth_progress_var
+@@ -1751,9 +1745,6 @@
+ 
+ 	trigger = {
+ 		has_completed_special_project_in_log = XVCV_MDLC_AP_BIO_ROBOT_PROJECT
+-	}
+-
+-	trigger = {
+ 		from = {
+ 			OR = {
+ 				#when the trait is 'added'

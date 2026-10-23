@@ -1,3 +1,18 @@
+# Machine Expansion Fixes — Independent Fork
+
+Unofficial corrective fork of Machines & Robot Expansion Continued 3.2.3, for Stellaris 4.5.*. Maintained independently under JustARegularAndTypicalPerson; not an official release by the original mod authors.
+
+- **Steam/add-on users:** use the separate [Machine Expansion Fixes package](Fork/MachineExpansionFixes/README.md) together with the original MRE. See [release downloads](https://github.com/JustARegularAndTypicalPerson/stellaris-machine-robot-expansion/releases).
+- **Source users:** this branch already applies the same 15 corrected files directly. Do not enable the add-on a second time alongside this source tree.
+- **Changes and evidence:** [exact patch](Fork/MachineExpansionFixes/SourcePatch.diff), [audit](Fork/MachineExpansionFixes/Audit20261023.md), [source hashes](Fork/MachineExpansionFixes/Sources.json), and [release notes](Fork/ReleaseNotes.md).
+- **Scope:** fixes only. The authored balance redesign and tradition projects are separate and unpublished.
+- **Validation:** source-reviewed; not verified in a running game. Save compatibility is unverified.
+- **Provenance:** this derived patch was prepared with AI assistance. Original code and assets remain credited to XVCV, Openly Retro, Legit Rikk, and the other MRE contributors. Existing notices are retained; no new license over inherited content is granted.
+
+The original upstream README follows for attribution and project history. Its contribution policy describes the upstream project.
+
+---
+
 This is a continuation of XVCV's "Machine & Robot Expansion" mod for Stellaris. The goals are to keep it up to date with the latest game version, fix bugs, and add new content.
 
 The original author has abandoned the work and is no longer available for contact.

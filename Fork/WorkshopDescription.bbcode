@@ -1,0 +1,31 @@
+[h1]Machine Expansion Fixes[/h1]
+Unofficial fixes add-on for [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3163759042]Machines & Robot Expansion Continued[/url] 3.2.3, for Stellaris 4.5.*.
+
+[b]Requires the original mod. Enable both in one playset and load this add-on after it.[/b]
+
+[h2]Included corrections[/h2]
+[list]
+[*]Restore missing World-Machine insight awards from insight blockers, district construction, and the ruined-world anomaly.
+[*]Make Auto-Core storage use the same ten-core base and resource-specific bonuses as the production checks.
+[*]Update obsolete psionic shield upkeep constants and rare-technology weight references.
+[*]Correct the Bio-Mech assembly multiplier, stale growth displays, and duplicated event conditions.
+[*]Give Encrypted Protocol recycling options their recycling reward instead of the manufacturing reward.
+[*]Correct built/free district counts, specialized World-Machine totals, army-count helpers, and trait-filtered population helpers.
+[*]Guard ringworld recalculation against division by zero when no eligible habitable segment remains.
+[*]Prevent completed Auto-Factory research from being offered again, and finish core fabrication when its countdown reaches zero.
+[*]Correct the ruler scope in the dormant AI Splitting handler. Its upstream-disabled hooks remain disabled.
+[/list]
+
+[h2]Scope and compatibility[/h2]
+Version 0.1.1 contains corrective changes only. The authored core-district redesign, balance changes, tradition changes, and Gigastructures compatibility packages are separate and are not included or required.
+
+This add-on replaces 15 files from MRE 3.2.3. Another mod replacing the same files can override these corrections or have its changes overridden. Future MRE updates may require a new patch release. Use only one copy of these fixes; do not also enable the full-source fork with the same changes.
+
+[h2]Release status[/h2]
+Source-reviewed initial release. These fixes have not been verified in a running game, and save compatibility has not been established. The source audit records remaining investigation items, including fabrication stop/start timers and army-refill interruption behavior.
+
+[h2]Source and credits[/h2]
+[url=https://github.com/JustARegularAndTypicalPerson/stellaris-machine-robot-expansion]Public source fork, exact patch, and audit[/url]
+[url=https://github.com/openly-retro/stellaris-machine-robot-expansion]Original continuation repository[/url]
+
+Original mod code belongs to XVCV, Openly Retro, Legit Rikk, and the other MRE contributors. This is an independent, AI-assisted derived patch, not an official release by those maintainers. Existing credits and notices are retained.

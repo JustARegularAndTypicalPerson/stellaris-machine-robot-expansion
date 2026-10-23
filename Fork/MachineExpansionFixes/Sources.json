@@ -1,0 +1,85 @@
+{
+  "UpstreamRepository": "https://github.com/openly-retro/stellaris-machine-robot-expansion.git",
+  "UpstreamCommit": "e9d54b14a1f22730f17709efb23b37d83361c2a6",
+  "BaseVersion": "3.2.3",
+  "Files": [
+    {
+      "Path": "common/component_templates/xvcv_mdlc_utilities_templates.txt",
+      "UpstreamSha256": "f3e1465f6b50878faad4b1c490545131198e7e19263734984152161f757d6905",
+      "PatchedSha256": "5b26979ca50401f4ff83fb67f5d79a46e970e4299c4424001db032423e9fb087"
+    },
+    {
+      "Path": "common/on_actions/oxr_mdlc_on_actions_origin_world_machine.txt",
+      "UpstreamSha256": "5a0382554ecaf77303f4de340470f4f9adcd87f387fc8608adafc4c2a73ce097",
+      "PatchedSha256": "6c43d84a25f73a94ad846c10d9e9535257b3578a002eee8acf62681c23b1dda0"
+    },
+    {
+      "Path": "common/script_values/oxr_mdlc_script_values_origin_world_machines.txt",
+      "UpstreamSha256": "f4990298411b112023d2ceb6d6c514f36e55f2a72a55f2fc304b226c32971e4f",
+      "PatchedSha256": "a8d5ff3fb76251e67f4c88f7cb94946e2cbd9ce2767514368de8c37e43ce303f"
+    },
+    {
+      "Path": "common/script_values/oxr_mdlc_script_values_utils.txt",
+      "UpstreamSha256": "bcc3359808d64eca7ec4c71d1673a40949d19715177b01249c347c37c8356e37",
+      "PatchedSha256": "f49b33d4aac5215a03f1f91828ac9b352943480ffac8a4fb0529449f9ef8097b"
+    },
+    {
+      "Path": "common/scripted_effects/oxr_mdlc_scripted_effects_bio_mech.txt",
+      "UpstreamSha256": "2b7d639099522ce874cd8ae1d1530b787c624c1587970151fe346378ecd9000f",
+      "PatchedSha256": "5f65413e9c8c80d52b9c02c3c11eaeefd94fe06f1355073f54a799377999206a"
+    },
+    {
+      "Path": "common/scripted_effects/rikk_mdlc_scripted_effects.txt",
+      "UpstreamSha256": "cb1c31fa06daf6d50bf59c458b44a0f18a3a9b698049b9e4d5dc844a43e68200",
+      "PatchedSha256": "b10c123b2233061659753be4c40498a8ee49ebb1a1abadaa0c9d4d98a07f14d0"
+    },
+    {
+      "Path": "common/strategic_resources/oxr_mdlc_strategic_resources_origin_world_machine.txt",
+      "UpstreamSha256": "832650382f559abefff6929f06fa8539435ec9654968884ee0b00bfe2acd8e68",
+      "PatchedSha256": "83a80146db01bbe791b85a992507d7034d5a8e8648edf3b2e91c75aa2ae93b2e"
+    },
+    {
+      "Path": "common/technology/oxr_mdlc_tech_councilor_editor.txt",
+      "UpstreamSha256": "5a0e20063e77f1b056a746bbfface275302757a7b5885ae13d85beb7a3e17a18",
+      "PatchedSha256": "8a3b76fdcfc4a0940ae7b02f78fe88dca0e08c32c57975d915b61be7f151ace7"
+    },
+    {
+      "Path": "common/technology/xvcv_mdlc_tech.txt",
+      "UpstreamSha256": "2264db30c5b6b71108bebac0d2cc90a1342ec95b79d878ed44a137db8d4f2373",
+      "PatchedSha256": "fd24d4c3feb3a322fa56860252f04ce265b5c2fde9e9d74f08cd3a17fe2cb7a3"
+    },
+    {
+      "Path": "common/technology/xvcv_mdlc_tech_customgui.txt",
+      "UpstreamSha256": "c20cdb995a718c215920f7fe24a6958099dd7cfb7e321996e3ee9bc6895d20a5",
+      "PatchedSha256": "4950c96cfcf068a425ed14ef6b5dbb9c5eb26d09a7bfefb26d28fb5130eb58e4"
+    },
+    {
+      "Path": "common/technology/xvcv_mdlc_technology_abyss.txt",
+      "UpstreamSha256": "6ab3a4d798cc2a32e98b56e9d1b3ddedf6f20acdd77ac98bfd1c515c835889dc",
+      "PatchedSha256": "65a21cbfafcf198c43e56da7fa28e5b6f4f9a8fcb56d278f1b52385009a75d80"
+    },
+    {
+      "Path": "events/oxr_mdlc_events_origin_world_machine_main.txt",
+      "UpstreamSha256": "644113e49557274f416f0d1f8a9d5a9aa548305c4393255e59179e507061de76",
+      "PatchedSha256": "34a056d7f7b962a2dd2af14e8228cb5fd641758b014a5d51dd06c033be959ec4"
+    },
+    {
+      "Path": "events/rikk_mdlc_events_encrypted.txt",
+      "UpstreamSha256": "f460001ac3bb09ee139560e0efd95d15bb616d5f5e49d2b50b66374c71261b46",
+      "PatchedSha256": "7f0dc9f7b0ed2de585cd30898a050a8773e937cc330cc79094e3373d30aa4130"
+    },
+    {
+      "Path": "events/rikk_mdlc_events_extended.txt",
+      "UpstreamSha256": "595e604fb8087a97517e64456c181b96e1e5ca154cede79c5b15ad98049e3911",
+      "PatchedSha256": "49e142eea2cb6e6e678ca3fbef0e2771af079d5e111e1019fdba26060844d8d9"
+    },
+    {
+      "Path": "events/xvcv_mdlc_events_main.txt",
+      "UpstreamSha256": "c8187500a0c1f7846612f5557ce0e7224415edda4f849ece0e70b5c23ef9b80f",
+      "PatchedSha256": "b47664633b2424549508441aad1fe57b071c1648c3a55e3d71566fa4a47ac22d"
+    }
+  ],
+  "LastSourceAudit": "2026-10-23",
+  "PublicFork": "https://github.com/JustARegularAndTypicalPerson/stellaris-machine-robot-expansion",
+  "ForkBranch": "codex/mre-fixes"
+}

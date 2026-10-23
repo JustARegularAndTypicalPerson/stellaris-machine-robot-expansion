@@ -1,0 +1,363 @@
+namespace = rikk_mdlc_extended
+
+# Calculate rikk_mdlc_trait_robotic_deviants
+country_event = {
+	id = rikk_mdlc_extended.01
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		any_owned_species = { has_trait = rikk_mdlc_trait_robotic_deviants }
+		has_mute_extended_machines = no
+	}
+
+	immediate = {
+		every_owned_colony = {
+			limit = { any_owned_species = { has_trait = rikk_mdlc_trait_robotic_deviants } }
+			export_trigger_value_to_variable = {
+				trigger = count_owned_pop_amount
+				parameters = { limit = { has_trait = rikk_mdlc_trait_robotic_deviants } }
+				variable = rikk_mdlc_count_pop_trait_robotic_deviants_var
+			}
+			if = {
+				limit = {
+					NOT = { has_deposit = rikk_mdlc_d_trait_robotic_deviants }
+				}
+				add_deposit = rikk_mdlc_d_trait_robotic_deviants
+			}
+		}
+	}
+}
+#clear 'rikk_mdlc_d_trait_robotic_deviants' deposit when its requirement is not met
+country_event = {
+	id = rikk_mdlc_extended.02
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		any_owned_colony = {
+			has_deposit = rikk_mdlc_d_trait_robotic_deviants
+			NOT = { any_owned_species = { has_trait = rikk_mdlc_trait_robotic_deviants } }
+		}
+		has_mute_extended_machines = no
+	}
+
+	immediate = {
+		every_owned_colony = {
+			limit = {
+				has_deposit = rikk_mdlc_d_trait_robotic_deviants
+				NOT = { any_owned_species = { has_trait = rikk_mdlc_trait_robotic_deviants } }
+			}
+			# oxr_mdlc_planet_clear_all_custom_deposits_of_type = {
+			# 	CUSTOM_DEPOSIT_TYPE = rikk_mdlc_d_trait_robotic_deviants
+			# }
+			remove_deposit = rikk_mdlc_d_trait_robotic_deviants
+			clear_variable = rikk_mdlc_count_pop_trait_robotic_deviants_var
+		}
+	}
+}
+
+#Add trait and Skill levels AI Splitting
+# 'from' is the leader, this is called via on_action
+country_event = {
+	id = rikk_mdlc_extended.03
+	hide_window = yes
+	is_triggered_only = yes
+	trigger = { 
+		has_authority = auth_machine_intelligence
+		any_owned_species = { has_trait = rikk_mdlc_trait_robotic_ai_splitting }
+		from = {
+			NOR = {
+				is_robotic_species = no
+				has_leader_flag = ai_splitting_leader_flag
+			}
+		}
+		has_mute_extended_machines = no
+	}
+
+	immediate = {
+
+		from = {
+			if = {
+				limit = { 
+					root.ruler = {
+						has_total_skill = 1
+					}
+				}
+				add_trait = { show_message = no trait  = rikk_mdlc_trait_leader_ai_splitting_00 }
+			}
+			else_if = {
+				limit = { 
+					root.ruler = {
+						has_total_skill = 2
+					}
+				}
+				add_skill = 1
+				add_trait = { show_message = no trait  = rikk_mdlc_trait_leader_ai_splitting_01 }
+			}
+			else_if = {
+				limit = { 
+					root.ruler = {
+						has_total_skill = 3
+					}
+				}
+				while = { count = 2 add_skill = 1 }
+				add_trait = { show_message = no trait  = rikk_mdlc_trait_leader_ai_splitting_02 }
+			}
+			else_if = {
+				limit = { 
+					root.ruler = {
+						has_total_skill = 4
+					}
+				}
+				while = { count = 3 add_skill = 1 }
+				add_trait = { show_message = no trait  = rikk_mdlc_trait_leader_ai_splitting_03 }
+			}
+			else_if = {
+				limit = { 
+					root.ruler = {
+						has_total_skill = 5
+					}
+				}
+				while = { count = 4 add_skill = 1 }
+				add_trait = { show_message = no trait  = rikk_mdlc_trait_leader_ai_splitting_04 }
+			}
+			else_if = {
+				limit = { 
+					root.ruler = {
+						has_total_skill = 6
+					}
+				}
+				while = { count = 5 add_skill = 1 }
+				add_trait = { show_message = no trait  = rikk_mdlc_trait_leader_ai_splitting_05 }
+			}
+			else_if = {
+				limit = { 
+					root.ruler = {
+						has_total_skill = 7
+					}
+				}
+				while = { count = 6 add_skill = 1 }
+				add_trait = { show_message = no trait  = rikk_mdlc_trait_leader_ai_splitting_06 }
+			}
+			else_if = {
+				limit = { 
+					root.ruler = {
+						has_total_skill = 8
+					}
+				}
+				while = { count = 7 add_skill = 1 }
+				add_trait = { show_message = no trait  = rikk_mdlc_trait_leader_ai_splitting_07 }
+			}
+			else_if = {
+				limit = { 
+					root.ruler = {
+						has_total_skill = 9
+					}
+				}
+				while = { count = 8 add_skill = 1 }
+				add_trait = { show_message = no trait  = rikk_mdlc_trait_leader_ai_splitting_08 }
+			}
+			else_if = {
+				limit = { 
+					root.ruler = {
+						has_total_skill > 9
+					}
+				}
+				while = { count = 9 add_skill = 1 }
+				add_trait = { show_message = no trait  = rikk_mdlc_trait_leader_ai_splitting_09 }
+			}
+			set_leader_flag = ai_splitting_leader_flag
+		}
+	}
+}
+
+# Count meshnet pops on day 2 of the month, rather than at the top of the month,
+# when all other mods, etc, are doing monthly calculations
+# If we are 1 day late calculating the meshnet bonus, it should be fine
+country_event = {
+	id = rikk_mdlc_extended.10
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		any_owned_colony = {
+			any_owned_species = { has_trait = rikk_mdlc_trait_robotic_mesh_network }
+		}
+		has_mute_extended_machines = no
+	}
+
+	immediate = {
+		country_event = {
+			id = rikk_mdlc_extended.12
+			days = 1
+		}
+	}
+}
+
+# Calculate rikk_mdlc_counter_mesh_network at the country level. Called monthly
+# If there are no meshnet pops in the empire any more, because the player modded the species,
+# or for some other reason ... there is no "shutoff" condition, meaning,
+# there is no reason to unset the variable that is set in this country event.
+# If there are no meshnet pops then the entry trigger will fail and nothing will happen.
+country_event = {
+	id = rikk_mdlc_extended.12
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		any_owned_colony = {
+			any_owned_species = { has_trait = rikk_mdlc_trait_robotic_mesh_network }
+		}
+		has_mute_extended_machines = no
+	}
+
+	immediate = {
+		# Set at country level
+		# If there are no meshnet pops in the empire, there's no reason to clear this var,
+		# since it won't matter
+		export_trigger_value_to_variable = {
+			trigger = count_owned_pop_amount
+			parameters = { limit = { has_trait = rikk_mdlc_trait_robotic_mesh_network } }
+			variable = rikk_mdlc_count_mesh_net_pops_in_empire_var
+		}
+		# Cap the value at 10000
+		if = {
+			limit = {
+				check_variable = {
+					which = rikk_mdlc_count_mesh_net_pops_in_empire_var
+					value > 10000
+				}
+			}
+			set_variable = {
+				which = rikk_mdlc_count_mesh_net_pops_in_empire_var
+				value = 10000
+			}
+			set_variable = {
+				which = rikk_mdlc_country_pop_meshnet_bonus_var
+				value = 0.25
+			}
+		}
+		else = {
+			set_variable = {
+				which = rikk_mdlc_country_pop_meshnet_bonus_var
+				value = rikk_mdlc_count_mesh_net_pops_in_empire_var
+			}
+			multiply_variable = {
+				which = rikk_mdlc_country_pop_meshnet_bonus_var
+				value = 0.000025
+			}
+		}
+
+		# log = "Empire meshnet pop bonus for \\[this.GetName] set to \\[this.rikk_mdlc_country_pop_meshnet_bonus_var] "
+		# every_owned_colony = {
+		# 	limit = {
+		# 		any_owned_species = { has_trait = rikk_mdlc_trait_robotic_mesh_network }
+		# 	}
+		# 	planet_event = { id = rikk_mdlc_extended.13 }
+		# }
+	}
+}
+
+# Count nanomachines per planet, on day 2 of the month
+country_event = {
+	id = rikk_mdlc_extended.20
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		# Only run this event for machines and synths
+		oxr_mdlc_is_robot_empire = yes
+		# Not sure if this trigger is valid any more
+		has_mute_extended_machines = no
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				any_owned_colony = {
+					any_owned_species = { has_trait = rikk_mdlc_trait_robotic_constant_growth }
+				}
+			}
+			country_event = {
+				id = rikk_mdlc_extended.22
+				days = 1
+			}
+			set_variable = {
+				which = oxr_mdlc_country_has_any_nanomachine_trait_pops
+				value = 1
+			}
+		}
+		# Since this
+		else = {
+			set_variable = {
+				which = oxr_mdlc_country_has_any_nanomachine_trait_pops
+				value = 0
+			}
+		}
+
+		# Do something on the first run of this event, and only once
+		if = {
+			limit = {
+				NOT = {
+					has_country_flag = rikk_mdlc_extended_22_first_run_done
+				}
+			}
+			set_policy = {
+				policy = oxr_mdlc_extended_traits_nano_drone_control
+				option = oxr_mdlc_extended_traits_nano_drone_control_balanced
+				cooldown = no
+			}
+			set_country_flag = rikk_mdlc_extended_22_first_run_done
+		}
+	}
+}
+
+# Count nanomachines per planet, that have them, and set a static var that gets updated monthly,
+country_event = {
+	id = rikk_mdlc_extended.22
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		# Because we already filtered for these conditions in the entry event
+		
+	}
+
+	immediate = {
+		every_owned_colony = {
+			limit = { any_owned_species = { has_trait = rikk_mdlc_trait_robotic_constant_growth } }
+			colony = {
+				set_variable = {
+					which = rikk_mdlc_planet_nanomachines_bonus_mult_percent
+					value = 0
+				}
+				export_trigger_value_to_variable = {
+					trigger = count_owned_pop_amount
+					parameters = { limit = { has_trait = rikk_mdlc_trait_robotic_constant_growth } }
+					variable = rikk_mdlc_count_nanomachine_pops_on_planet_var
+				}
+				log = "(Nanomachines Monthly) \\[this.GetName] has \\[this.rikk_mdlc_count_nanomachine_pops_on_planet_var] Nanomachine pops"
+				# Homeworld starts at 5k...
+				# When planet population of nanomachines reaches 10k, they don't get their bonuses any more,
+				# and penalties start to kick in
+				# It is an inverse relationship - more pops, less bonus
+
+				set_variable = {
+					which = rikk_mdlc_planet_nanomachines_bonus_mult_percent
+					value = 10000
+				}
+				subtract_variable = {
+					which = rikk_mdlc_planet_nanomachines_bonus_mult_percent
+					value = rikk_mdlc_count_nanomachine_pops_on_planet_var
+				}
+				divide_variable = {
+					which = rikk_mdlc_planet_nanomachines_bonus_mult_percent
+					value = 10000
+				}
+				log = "Planet nanomachine pop bonus on \\[this.GetName] set to \\[this.rikk_mdlc_planet_nanomachines_bonus_mult_percent] for empire \\[This.owner.GetName]]"
+			} #/ colony
+		}
+	}
+}
+# EOF

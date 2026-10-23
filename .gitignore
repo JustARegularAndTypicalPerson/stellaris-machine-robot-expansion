@@ -39,4 +39,5 @@ Scripts/
 pyvenv.cfg
 
 descriptor.mod
+!Fork/MachineExpansionFixes/descriptor.mod
 .cwtools/stl.cwb

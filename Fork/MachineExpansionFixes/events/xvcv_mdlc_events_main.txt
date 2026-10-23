@@ -1,0 +1,3303 @@
+namespace = xvcv_mdlc
+
+### Game Start Events ###
+#on_game_start: starting condition adjustment
+
+country_event = {
+	id = xvcv_mdlc.1
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		is_robot_empire = yes
+		OR = {
+			has_valid_civic = xvcv_mdlc_civic_relic_unknown_core
+			has_valid_civic = xvcv_mdlc_civic_goods_distributor
+			has_valid_civic = xvcv_mdlc_civic_planet_cracker
+			has_valid_civic = xvcv_mdlc_civic_central_processing
+			has_valid_civic = xvcv_mdlc_civic_uplink_node
+			has_valid_civic = xvcv_mdlc_civic_friendship_protocol
+			# xvcv_mdlc_country_has_synthetic_origin = yes
+			this.species = { has_trait = xvcv_mdlc_trait_rock_body }
+			this.species = { has_trait = xvcv_mdlc_trait_synth_skin }
+			# has_oxr_mdlc_origin_world_machine_awakened = yes
+		}
+	}
+
+	immediate = {
+		if = {
+			limit = { has_valid_civic = xvcv_mdlc_civic_relic_unknown_core }
+			add_relic = xvcv_mdlc_r_unknown_core
+		}
+		if = {
+			limit = { has_valid_civic = xvcv_mdlc_civic_goods_distributor }
+			add_resource = { consumer_goods = 100 }
+			add_research_option = xvcv_mdlc_tech_automated_goods_manufacturing_1
+		}
+		#add / remove a unique leader trait for gestalt nodes with certain civics
+		if = {
+			limit = { has_valid_civic = xvcv_mdlc_civic_central_processing }
+			random_owned_leader = {
+				limit = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_cognitive
+				}
+				add_trait = { show_message = no trait  = xvcv_mdlc_leader_trait_civic_central_processing }
+			}
+		}
+		if = {
+			limit = { has_valid_civic = xvcv_mdlc_civic_uplink_node }
+			random_owned_leader = {
+				limit = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_growth
+				}
+				add_trait = { show_message = no trait  = xvcv_mdlc_leader_trait_civic_uplink_node }
+			}
+		}
+		if = {
+			limit = { has_valid_civic = xvcv_mdlc_civic_friendship_protocol }
+			random_owned_leader = {
+				limit = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_legion
+				}
+				add_trait = { show_message = no trait  = xvcv_mdlc_leader_trait_civic_friendship_protocol }
+			}
+		}
+		#and that ends here
+		#and this starts here
+		
+		capital_scope = {
+			# Rock body trait
+			if = {
+				limit = {
+					prev.species = { has_trait = xvcv_mdlc_trait_rock_body }
+					# Exclude mechanical heritage origin, districts are balanced elsewhere
+					owner = { has_xvcv_mdlc_origin_mechanical_heritage = no }
+				}
+				if = {
+					limit = { has_district = district_generator }
+					while = {
+						remove_district = district_generator
+						add_district = district_mining
+						count = 2
+					}
+					log = "\\[prev.GetName] MINERAL BODY | swapped generators for mining districts"
+				}
+			}
+			# Organic skin trait
+			if = {
+				limit = {
+					prev.species = { has_trait = xvcv_mdlc_trait_synth_skin }
+					# Exclude mechanical heritage origin, districts are balanced elsewhere
+					owner = { has_xvcv_mdlc_origin_mechanical_heritage = no }
+				}
+				prev = { add_resource = { food = 200 } }
+				# Standard planets
+				if = {
+					limit = { uses_district_set = standard }
+					log = "\\[prev.GetName] SYNTH SETUP (standard) | Organic skin | Removing 2 generators, adding 1 farm, 1 mine"
+					remove_district = district_generator
+					add_district = district_farming
+				}
+				else_if = {
+					limit = { uses_district_set = machine_world }
+					add_deposit = d_organic_slurry
+				}
+			}
+			# Catalytic empires
+			if = {
+				limit = {
+					prev = {
+						has_civic = civic_catalytic_processing
+						# Exclude mechanical heritage origin, districts are balanced elsewhere
+						has_xvcv_mdlc_origin_mechanical_heritage = no
+					}
+				}
+				# Standard planets
+				if = {
+					limit = { uses_district_set = standard }
+					log = "\\[prev.GetName] SYNTH SETUP (standard) | Catalytic | Removing 2 generators and adding 2 farms"
+					remove_district = district_generator
+					remove_district = district_generator
+					# add_district = district_farming
+					add_district = district_farming
+				}
+			}
+			# Situational tweak for organic skin + synth ascended start
+			if = {
+				limit = {
+					prev = { has_civic = civic_catalytic_processing }
+					prev.species = { has_trait = xvcv_mdlc_trait_synth_skin }
+					prev = { has_origin = xvcv_mdlc_origin_synth_ascend }
+				}
+				# Ends up with 
+				remove_district = district_farming
+				remove_district = district_city
+				add_district = district_generator
+				log = "\\[prev.GetName] SYNTH SETUP (Mechanical) | Catalytic | organic skin | synth ascended | added generator"
+			}
+			inline_script = "country/game_start/WML_planet_cracker_setup"
+			if = {
+				limit = { prev = { has_xvcv_mdlc_origin_synth_ascend = yes } }
+				# dont alter previous district balancing
+				if = {
+					limit = {
+						NAND = {
+							prev = { has_civic = civic_catalytic_processing }
+							prev.species = { has_trait = xvcv_mdlc_trait_synth_skin }
+						}
+					}
+					remove_district = district_generator
+					add_district = district_mining
+					while = {
+						limit = { has_district = district_farming }
+						remove_district = district_farming
+						if = {
+							limit = { num_free_districts = { type = district_generator value <= 1 } } #equal to or less than 1 #this is intentional
+							add_deposit = xvcv_mdlc_d_district_generator_slot_plus_1
+						}
+						add_district = district_generator
+					}
+				}
+
+				add_building = building_robot_assembly_plant
+			}
+
+			# I really don't like adding all these cascading conditionals at the end
+			# Additional resource balancing
+			if = {
+				limit = {
+					num_buildings = {
+						type = building_temple
+						value > 1
+					}
+				}
+				remove_building = building_temple
+				add_building = building_factory_1
+				log = "\\[prev.GetName] Swapped EXTRA temple for factory"
+			}
+			if = {
+				limit = {
+					prev = {
+						has_monthly_income = { resource = food value < 0 }
+					}
+				}
+				add_deposit = d_food_10
+				log = "\\[prev.GetName] Found FOOD deficit, added +10 food deposit"
+			}
+		}
+	}
+}
+
+#on_game_start: dominant species modification
+planet_event = {
+	id = xvcv_mdlc.2
+	hide_window = yes
+	is_triggered_only = yes 
+
+	trigger = {
+		owner = {
+			xvcv_mdlc_country_has_synthetic_origin = yes
+		}
+	}
+
+	immediate = {
+		owner = {
+			if = {
+				limit = { xvcv_mdlc_country_has_synthetic_origin = yes }
+				set_country_flag = synthetic_empire
+				set_country_flag = synth_assimilation
+		
+				give_technology = { tech = tech_robotic_workers message = no }
+				give_technology = { tech = tech_droid_workers message = no }
+				give_technology = { tech = tech_synthetic_workers message = no }
+				give_technology = { tech = tech_synthetic_leaders message = no }
+	
+				this.species = {
+					create_species = {
+						adjective = this
+						name = this
+						namelist = prev
+						plural = this
+						class = XVCV_MDLC_ROBOT
+						portrait = this
+						traits = this
+						homeworld = prev.capital_scope
+					}
+				}
+
+				xvcv_mdlc_dominant_species_changing_effect = yes
+			}
+
+		} # close owner scope
+
+		# Change citizenship rights for organic species in the galaxy,
+		# so that they do not automatically get assimilated by the synthetic empire
+		# let players choose if they want to assimilate the species
+		every_country = {
+			limit = {
+				founder_species = {
+					OR = {
+						has_trait = trait_organic
+						has_trait = trait_lithoid
+					}
+				}
+			}
+			founder_species = {
+
+				# Set the citizenship for the random empire's founder species
+				# in relation to the synth empire's country
+				# it seems this effect must be called from pop/pop_group/leader/species scope
+
+				set_citizenship_type = {
+					country = prevprev.owner
+					type = citizenship_full
+					cooldown = no
+				}
+			}
+			
+		} #/every_country
+
+	} #/immediate
+}
+
+#on_game_start / on_single_player_save_game_load: creating invisible countries
+event = {
+	id = xvcv_mdlc.3
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		NOR = {
+			any_country = { is_country_type = xvcv_mdlc_trading_machine_controller }
+			any_country = { is_country_type = xvcv_mdlc_energy_dimension }
+			any_country = { is_country_type = xvcv_mdlc_data_storage }
+		}
+	}
+
+	immediate = {
+		if = {
+			limit = { NOT = { any_country = { is_country_type = xvcv_mdlc_trading_machine_controller } } }
+			create_country = {
+				name = "name_xvcv_mdlc_trading_machine_controller"
+				type = xvcv_mdlc_trading_machine_controller
+				flag = {
+					icon = {
+						category = "special"
+						file = "caravaneer_00.dds"
+					}
+					background = {
+						category = "backgrounds"
+						file = "triangle_split.dds"
+					}
+					colors = {
+						"green"
+						"dark_green"
+						"null"
+						"null"
+					}
+				}
+			}
+		}
+		if = {
+			limit = { NOT = { any_country = { is_country_type = xvcv_mdlc_energy_dimension } } }
+			create_country = {
+				name = "name_xvcv_mdlc_energy_dimension"
+				type = xvcv_mdlc_energy_dimension
+				flag = {
+					icon = {
+						category = "special"
+						file = "extradimensional_02.dds"
+					}
+					background = {
+						category = "backgrounds"
+						file = "00_solid.dds"
+					}
+					colors = {
+						"dark_blue"
+						"black"
+						"null"
+						"null"
+					}
+				}
+			}
+		}
+		if = {
+			limit = { NOT = { any_country = { is_country_type = xvcv_mdlc_data_storage } } }
+			create_country = { type = xvcv_mdlc_data_storage }
+		}
+	}
+}
+#'xvcv_mdlc_origin_synth_ascend' origin effect event #also see: 'xvcv_mdlc.1'
+
+country_event = {
+	id = xvcv_mdlc.4
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		xvcv_mdlc_country_has_synthetic_origin = yes
+		NOT = { has_country_flag = xvcv_mdlc_synth_origin_start_project_cleared }
+	}
+
+	immediate = {
+		if = {
+			limit = { has_special_project = SYNTHETIC_EVOLUTION_PROJECT }
+			abort_special_project = { type = SYNTHETIC_EVOLUTION_PROJECT }
+			# Prevent this event from looping every single day
+			set_country_flag = xvcv_mdlc_synth_origin_start_project_cleared
+		}
+		else = { country_event = { id = xvcv_mdlc.4 days = 1 } } #check per day
+	}
+}
+
+# Do game start things for mechanical heritage origin
+country_event = {
+	id = xvcv_mdlc.200
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		has_xvcv_mdlc_origin_mechanical_heritage = yes
+
+		# Don't want this firing multiple times
+		doesnt_have_country_flag = { FLAG = xvcv_mdlc_origin_mechanical_heritage_empire }
+	}
+
+	immediate = {
+		log = "Starting game setup effects for Mechanical Origin empire \\[This.GetName] "
+		oxr_mdlc_country_mechanical_heritage_origin_game_start_effect = yes
+	}
+}
+
+# Do game start things for Synthetic Ascended origin
+country_event = {
+	id = xvcv_mdlc.210
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		has_xvcv_mdlc_origin_synth_ascend = yes
+	}
+
+	immediate = {
+		log = "Starting game setup effects for Synth Origin empire \\[This.GetName] "
+		oxr_mdlc_country_synth_ascended_origin_game_start_effect = yes
+	}
+}
+
+### 'xvcv_mdlc_ap_mind_separation' and 'xvcv_mdlc_ap_mind_integration' Ascension Perks Events ###
+#'XVCV_MDLC_AP_MIND_SEPARATION_PROJECT' special project effect event
+country_event = {
+	id = xvcv_mdlc.30
+	title = "xvcv_mdlc.30.name"
+	desc = "xvcv_mdlc.30.desc"
+	picture = GFX_evt_machine_sapience
+	show_sound = event_synthetic_evolution
+	is_triggered_only = yes
+
+
+	immediate = {
+		xvcv_mdlc_servitor_morale_clear_effect = yes
+		#see 'GOVERNMENT_CHANGE_EMPIRE_SIZE_MULT' in the '00_defines.txt' vanilla file for more info
+		#GOVERNMENT_CHANGE_EMPIRE_SIZE_MULT	= 10.0 # It will cost (Empire Size) * X Unity to change Government Type
+		export_trigger_value_to_variable = {
+			trigger = empire_size
+			variable = xvcv_mdlc_gov_reform_cost_var
+		}
+		add_resource = {
+			unity = 10 #cost to reform government
+			mult = xvcv_mdlc_gov_reform_cost_var
+		}
+		clear_variable = xvcv_mdlc_gov_reform_cost_var
+
+		#add 12 goods per pop
+
+		add_resource = {
+			consumer_goods = 12
+			mult = value:oxr_mdlc_num_pops_on_planet_oldstyle
+		}
+
+		#this effect code should be placed above 'change_government' effect
+		every_owned_leader = {
+			limit = {
+				is_councilor = yes
+				is_ruler = no
+			}
+			kill_leader = {
+				show_notification = no
+				fire = yes #this fires on_leader_fired instead of on_leader_death #I set this 'yes' because of the 'paragon.600' event, which is triggered by 'on_leader_death'
+			}
+		}
+
+		#to remove "[19:01:58][government_restrictions_solver.cpp:1316]: change_government at  file: events/xvcv_mdlc_events.txt line: 1527: Result origin is not valid" error log #stellaris v3.0.4
+		if = {
+			limit = {
+				OR = {
+					has_origin = origin_machine
+					#origins from this mod
+					has_origin = xvcv_mdlc_origin_start_with_colony
+				}
+			}
+			set_origin = origin_default
+		}
+
+		clear_ethos = yes
+		country_add_ethic = ethic_materialist
+		change_government = {
+			authority = auth_dictatorial
+			civics = {}
+			remove_invalid_civics = yes
+			cooldown = no
+		}
+		unlock_council_slots = 2
+		reset_policy_cooldowns = yes
+
+		set_country_flag = flesh_weakened
+		set_country_flag = synthetic_empire
+		set_country_flag = synth_assimilation
+
+		every_owned_pop_group = {
+			limit = { has_trait = xvcv_mdlc_trait_bio_robot }
+			modify_species = {
+				add_trait = trait_mechanical
+				remove_trait = trait_machine_unit
+			}
+		}
+		this.species = {
+			if = {
+				limit = {
+					NOT = {
+						has_trait = xvcv_mdlc_trait_bio_robot
+					}
+				}
+				create_species = {
+					adjective = this
+					name = this
+					namelist = prev
+					plural = this
+					class = "ROBOT"
+					portrait = this
+					traits = { trait = trait_mechanical }
+					traits = this
+					homeworld = prev.capital_scope
+					effect = {
+						modify_species = {
+							remove_trait = trait_machine_unit
+							ideal_planet_class = this
+							change_scoped_species = no
+						}
+					}
+				}
+			}
+		}
+		xvcv_mdlc_dominant_species_changing_effect = yes
+		every_owned_pop_group = {
+			limit = { has_trait = trait_machine_unit }
+			change_species = last_created_species
+		}
+		random_owned_pop_group = {
+			limit = { is_same_species = prev.species }
+			xvcv_mdlc_robot_species_rights_adjustments_effect = yes
+		}
+
+		# Do technology things after changing govt and species,
+		# Because some tech cannot be given until species is machine
+		give_technology = { tech = tech_robotic_workers message = no }
+		give_technology = { tech = tech_droid_workers message = no }
+		give_technology = { tech = tech_synthetic_workers message = no }
+		give_technology = { tech = tech_synthetic_leaders message = no }
+
+		give_technology = { tech = tech_luxuries_1 message = no }
+		give_technology = { tech = tech_luxuries_2 message = no }
+
+		#give species modification points with proper techs
+		if = {
+			limit = { has_technology = tech_robomodding_m }
+			give_technology = { tech = tech_robomodding message = no }
+		}
+		if = {
+			limit = { has_technology = tech_binary_motivators }
+			give_technology = { tech = tech_robomodding_points_1 message = no }
+		}
+		if = {
+			limit = { has_technology = tech_nanite_assemblers }
+			give_technology = { tech = tech_robomodding_points_2 message = no }
+		}
+
+
+		every_owned_army = {
+			limit = { is_defensive_army = no }
+			modify_army = {
+				name = random
+				type = "robotic_army"
+				species = this
+			}
+		}
+		every_owned_army = {
+			limit = { is_defensive_army = yes }
+			modify_army = {
+				name = random
+				type = "robotic_defense_army"
+				species = this
+			}
+		}
+		every_owned_leader = {
+			limit = {
+				is_event_leader = no
+				has_ethic = ethic_gestalt_consciousness
+			}
+			change_background_ethic = ethic_materialist
+			if = {
+				limit = { NOT = { has_trait = leader_trait_synthetic } }
+				add_trait = { show_message = no trait  = leader_trait_synthetic }
+			}
+		}
+		every_envoy = {
+			limit = {
+				is_event_leader = no
+				has_ethic = ethic_gestalt_consciousness
+			}
+			change_background_ethic = ethic_materialist
+		}
+		every_pool_leader = {
+			limit = {
+				is_event_leader = no
+				has_ethic = ethic_gestalt_consciousness
+			}
+			change_background_ethic = ethic_materialist
+			if = {
+				limit = { NOT = { has_trait = leader_trait_synthetic } }
+				add_trait = { show_message = no trait  = leader_trait_synthetic }
+			}
+		}
+
+		create_message = {
+			type = MESSAGE_ALL_GAINED_TRAIT
+			localization = MESSAGE_ALL_GAINED_TRAIT_DESC
+			days = @toast_message_days
+			variable = {
+				type = key
+				value = leader_trait_synthetic
+				localization = TRAIT
+			}
+			variable = {
+				key = TRAIT_KEY
+				value = leader_trait_synthetic
+			}
+			variable = {
+				key = "border"
+				value = "GFX_invisible" #TODO Common/ no rarity frame
+			}
+		}
+
+		ruler = {
+			remove_all_traits = yes
+			add_trait = { show_message = no trait  = leader_trait_synthetic }
+		}
+
+		#set the origin again when it's needed
+		if = {
+			limit = { NOT = { has_authority = auth_dictatorial } }
+			set_origin = origin_default
+			#and attempt to change the government again
+			change_government = {
+				authority = auth_dictatorial
+				civics = {}
+				remove_invalid_civics = yes
+				cooldown = no
+			}
+		}
+
+		random_owned_leader = {
+			limit = { leader_class = commander }
+			set_council_position = councilor_defense
+		}
+		random_owned_leader = {
+			limit = { leader_class = scientist }
+			set_council_position = councilor_research
+		}
+		every_owned_colony = {
+			while = {
+				limit = { has_district = district_nexus }
+				remove_district = district_nexus
+				add_district = district_city
+			}
+			while = {
+				limit = { has_district = district_rw_nexus }
+				remove_district = district_rw_nexus
+				add_district = district_rw_city
+			}
+			# Conversion from gestalt to individual was here , RIP 7/19/2025
+			if = {
+				limit = { has_building = building_deployment_post }
+				remove_building = building_deployment_post
+				add_building = building_colony_shelter
+			}
+			if = {
+				limit = { has_building = building_machine_capital }
+				remove_building = building_machine_capital
+				add_building = building_capital
+			}
+			if = {
+				limit = { has_building = building_machine_major_capital }
+				remove_building = building_machine_major_capital
+				add_building = building_major_capital
+			}
+			if = {
+				limit = { has_building = building_machine_system_capital }
+				remove_building = building_machine_system_capital
+				add_building = building_system_capital
+			}
+	
+			if = {
+				limit = { has_building = building_machine_assembly_plant }
+				remove_building = building_machine_assembly_plant
+				add_building = building_robot_assembly_plant
+			}
+			if = {
+				limit = { has_building = building_machine_assembly_complex }
+				remove_building = building_machine_assembly_complex
+				add_building = building_robot_assembly_complex
+			}
+	
+			if = {
+				limit = { has_building = building_production_center }
+				remove_building = building_production_center
+				add_building = building_ministry_production
+			}
+			if = {
+				limit = { has_building = building_supercomputer }
+				remove_building = building_supercomputer
+				add_building = building_institute
+			}
+	
+			if = {
+				limit = { has_building = xvcv_mdlc_building_uplink_node_facility }
+				remove_building = xvcv_mdlc_building_uplink_node_facility
+				add_building = building_noble_estates
+			}
+			while = {
+				limit = { has_building = building_sentinel_posts }
+				remove_building = building_sentinel_posts
+				add_building = building_precinct_house
+			}
+	
+			while = {
+				limit = { has_building = building_organic_sanctuary }
+				remove_building = building_organic_sanctuary
+				add_building = building_commercial_zone
+			}
+			while = {
+				limit = { has_building = building_organic_paradise }
+				remove_building = building_organic_paradise
+				add_building = building_commercial_megaplex
+			}
+	
+			while = {
+				limit = { has_building = building_uplink_node }
+				remove_building = building_uplink_node
+				add_building = building_bureaucratic_1
+			}
+			while = {
+				limit = { has_building = building_network_junction }
+				remove_building = building_network_junction
+				add_building = building_bureaucratic_2
+			}
+			while = {
+				limit = { has_building = building_system_conflux }
+				remove_building = building_system_conflux
+				add_building = building_bureaucratic_3
+			}
+	
+			while = {
+				limit = { has_building = building_simulation_1 }
+				remove_building = building_simulation_1
+				add_building = building_autochthon_monument
+			}
+			while = {
+				limit = { has_building = building_simulation_2 }
+				remove_building = building_simulation_2
+				add_building = building_heritage_site
+			}
+			while = {
+				limit = { has_building = building_simulation_3 }
+				remove_building = building_simulation_3
+				add_building = building_hypercomms_forum
+			}
+			if = {
+				limit = { has_building = building_alpha_hub }
+				remove_building = building_alpha_hub
+				add_building = building_autocurating_vault
+			}
+		}
+		country_event = { id = xvcv_mdlc.31 }
+	}
+
+	option = {
+		name = xvcv_mdlc.30.a
+		custom_tooltip = xvcv_mdlc.30.a.tooltip
+		hidden_effect = {
+			species = {
+				rename_species = {
+					prompt_country = prev
+					name_list = ascension_list
+				}
+			}
+			country_event = { id = xvcv_mdlc.32 days = 5 }
+		}
+	}
+}
+country_event = {
+	id = xvcv_mdlc.31
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		has_completed_special_project_in_log = XVCV_MDLC_AP_MIND_SEPARATION_PROJECT
+	}
+
+	immediate = {
+		switch = {
+			trigger = has_modifier
+			xvcv_mdlc_emotional_shock_10 = {
+				remove_modifier = xvcv_mdlc_emotional_shock_10
+				add_modifier = { modifier = "xvcv_mdlc_emotional_shock_9" days = 3240 }
+				country_event = { id = xvcv_mdlc.31 days = 360 }
+			}
+			xvcv_mdlc_emotional_shock_9 = {
+				remove_modifier = xvcv_mdlc_emotional_shock_9
+				add_modifier = { modifier = "xvcv_mdlc_emotional_shock_8" days = 2880 }
+				country_event = { id = xvcv_mdlc.31 days = 360 }
+			}
+			xvcv_mdlc_emotional_shock_8 = {
+				remove_modifier = xvcv_mdlc_emotional_shock_8
+				add_modifier = { modifier = "xvcv_mdlc_emotional_shock_7" days = 2520 }
+				country_event = { id = xvcv_mdlc.31 days = 360 }
+			}
+			xvcv_mdlc_emotional_shock_7 = {
+				remove_modifier = xvcv_mdlc_emotional_shock_7
+				add_modifier = { modifier = "xvcv_mdlc_emotional_shock_6" days = 2160 }
+				country_event = { id = xvcv_mdlc.31 days = 360 }
+			}
+			xvcv_mdlc_emotional_shock_6 = {
+				remove_modifier = xvcv_mdlc_emotional_shock_6
+				add_modifier = { modifier = "xvcv_mdlc_emotional_shock_5" days = 1800 }
+				country_event = { id = xvcv_mdlc.31 days = 360 }
+			}
+			xvcv_mdlc_emotional_shock_5 = {
+				remove_modifier = xvcv_mdlc_emotional_shock_5
+				add_modifier = { modifier = "xvcv_mdlc_emotional_shock_4" days = 1440 }
+				country_event = { id = xvcv_mdlc.31 days = 360 }
+			}
+			xvcv_mdlc_emotional_shock_4 = {
+				remove_modifier = xvcv_mdlc_emotional_shock_4
+				add_modifier = { modifier = "xvcv_mdlc_emotional_shock_3" days = 1080 }
+				country_event = { id = xvcv_mdlc.31 days = 360 }
+			}
+			xvcv_mdlc_emotional_shock_3 = {
+				remove_modifier = xvcv_mdlc_emotional_shock_3
+				add_modifier = { modifier = "xvcv_mdlc_emotional_shock_2" days = 720 }
+				country_event = { id = xvcv_mdlc.31 days = 360 }
+			}
+			xvcv_mdlc_emotional_shock_2 = {
+				remove_modifier = xvcv_mdlc_emotional_shock_2
+				add_modifier = { modifier = "xvcv_mdlc_emotional_shock_1" days = 360 }
+			}
+		}
+		if = {
+			limit = {
+				NOR = {
+					has_modifier = xvcv_mdlc_emotional_shock_10
+					has_modifier = xvcv_mdlc_emotional_shock_9
+					has_modifier = xvcv_mdlc_emotional_shock_8
+					has_modifier = xvcv_mdlc_emotional_shock_7
+					has_modifier = xvcv_mdlc_emotional_shock_6
+	
+					has_modifier = xvcv_mdlc_emotional_shock_5
+					has_modifier = xvcv_mdlc_emotional_shock_4
+					has_modifier = xvcv_mdlc_emotional_shock_3
+					has_modifier = xvcv_mdlc_emotional_shock_2
+					has_modifier = xvcv_mdlc_emotional_shock_1
+				}
+			}
+			add_modifier = { modifier = "xvcv_mdlc_emotional_shock_10" days = 3600 }
+			country_event = { id = xvcv_mdlc.31 days = 360 }
+		}
+	}
+}
+
+# ethics changing event for finished 'XVCV_MDLC_AP_MIND_SEPARATION_PROJECT' special project
+country_event = {
+	id = xvcv_mdlc.32
+	title = "xvcv_mdlc.32.name"
+	desc = "xvcv_mdlc.32.desc"
+	picture = GFX_evt_star_chart
+	show_sound = event_conversation
+	is_triggered_only = yes
+
+	trigger = {
+		has_completed_special_project_in_log = XVCV_MDLC_AP_MIND_SEPARATION_PROJECT
+	}
+
+	option = {
+		name = xvcv_mdlc.32.spiritualist
+		custom_tooltip = xvcv_mdlc.32.spiritualist.tooltip
+		hidden_effect = {
+			shift_ethic = ethic_spiritualist
+			country_event = { id = xvcv_mdlc.32 }
+		}
+	}
+	option = {
+		name = xvcv_mdlc.32.materialist
+		custom_tooltip = xvcv_mdlc.32.materialist.tooltip
+		hidden_effect = {
+			shift_ethic = ethic_materialist
+			country_event = { id = xvcv_mdlc.32 }
+		}
+	}
+	option = {
+		name = xvcv_mdlc.32.militarist
+		custom_tooltip = xvcv_mdlc.32.militarist.tooltip
+		hidden_effect = {
+			shift_ethic = ethic_militarist
+			country_event = { id = xvcv_mdlc.32 }
+		}
+	}
+	option = {
+		name = xvcv_mdlc.32.pacifist
+		custom_tooltip = xvcv_mdlc.32.pacifist.tooltip
+		hidden_effect = {
+			shift_ethic = ethic_pacifist
+			country_event = { id = xvcv_mdlc.32 }
+		}
+	}
+	option = {
+		name = xvcv_mdlc.32.xenophobe
+		custom_tooltip = xvcv_mdlc.32.xenophobe.tooltip
+		hidden_effect = {
+			shift_ethic = ethic_xenophobe
+			country_event = { id = xvcv_mdlc.32 }
+		}
+	}
+	option = {
+		name = xvcv_mdlc.32.xenophile
+		custom_tooltip = xvcv_mdlc.32.xenophile.tooltip
+		hidden_effect = {
+			shift_ethic = ethic_xenophile
+			country_event = { id = xvcv_mdlc.32 }
+		}
+	}
+	option = {
+		name = xvcv_mdlc.32.egalitarian
+		custom_tooltip = xvcv_mdlc.32.egalitarian.tooltip
+		hidden_effect = {
+			shift_ethic = ethic_egalitarian
+			country_event = { id = xvcv_mdlc.32 }
+		}
+	}
+	option = {
+		name = xvcv_mdlc.32.authoritarian
+		custom_tooltip = xvcv_mdlc.32.authoritarian.tooltip
+		hidden_effect = {
+			shift_ethic = ethic_authoritarian
+			country_event = { id = xvcv_mdlc.32 }
+		}
+	}
+	option = {
+		name = xvcv_mdlc.32.clear_ethics
+		custom_tooltip = xvcv_mdlc.32.clear_ethics.tooltip
+		hidden_effect = {
+			clear_ethos = yes
+			country_event = { id = xvcv_mdlc.32 }
+		}
+	}
+	option = {
+		name = xvcv_mdlc_close_evt_window
+	}
+}
+#'XVCV_MDLC_AP_MIND_INTEGRATION_PROJECT' special project effect event
+country_event = {
+	id = xvcv_mdlc.33
+	title = "xvcv_mdlc.33.name"
+	desc = "xvcv_mdlc.33.desc"
+	picture = GFX_evt_sapient_AI
+	show_sound = event_ai_started
+	is_triggered_only = yes
+
+	trigger = {
+		has_country_flag = xvcv_mdlc_ap_mind_integration_project_completed
+	}
+
+	immediate = {
+		xvcv_mdlc_project_mind_integration_effect = yes
+	}
+
+	option = {
+		name = xvcv_mdlc.33.a
+		hidden_effect = {
+			species = {
+				rename_species = {
+					prompt_country = prev
+					name_list = ascension_list
+				}
+			}
+		}
+	}
+}
+country_event = {
+	id = xvcv_mdlc.34
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		has_completed_special_project_in_log = XVCV_MDLC_AP_MIND_INTEGRATION_PROJECT
+	}
+
+	immediate = {
+		switch = {
+			trigger = has_modifier
+			xvcv_mdlc_identity_conflict_10 = {
+				remove_modifier = xvcv_mdlc_identity_conflict_10
+				add_modifier = { modifier = "xvcv_mdlc_identity_conflict_9" days = 3240 }
+				country_event = { id = xvcv_mdlc.34 days = 360 }
+			}
+			xvcv_mdlc_identity_conflict_9 = {
+				remove_modifier = xvcv_mdlc_identity_conflict_9
+				add_modifier = { modifier = "xvcv_mdlc_identity_conflict_8" days = 2880 }
+				country_event = { id = xvcv_mdlc.34 days = 360 }
+			}
+			xvcv_mdlc_identity_conflict_8 = {
+				remove_modifier = xvcv_mdlc_identity_conflict_8
+				add_modifier = { modifier = "xvcv_mdlc_identity_conflict_7" days = 2520 }
+				country_event = { id = xvcv_mdlc.34 days = 360 }
+			}
+			xvcv_mdlc_identity_conflict_7 = {
+				remove_modifier = xvcv_mdlc_identity_conflict_7
+				add_modifier = { modifier = "xvcv_mdlc_identity_conflict_6" days = 2160 }
+				country_event = { id = xvcv_mdlc.34 days = 360 }
+			}
+			xvcv_mdlc_identity_conflict_6 = {
+				remove_modifier = xvcv_mdlc_identity_conflict_6
+				add_modifier = { modifier = "xvcv_mdlc_identity_conflict_5" days = 1800 }
+				country_event = { id = xvcv_mdlc.34 days = 360 }
+			}
+			xvcv_mdlc_identity_conflict_5 = {
+				remove_modifier = xvcv_mdlc_identity_conflict_5
+				add_modifier = { modifier = "xvcv_mdlc_identity_conflict_4" days = 1440 }
+				country_event = { id = xvcv_mdlc.34 days = 360 }
+			}
+			xvcv_mdlc_identity_conflict_4 = {
+				remove_modifier = xvcv_mdlc_identity_conflict_4
+				add_modifier = { modifier = "xvcv_mdlc_identity_conflict_3" days = 1080 }
+				country_event = { id = xvcv_mdlc.34 days = 360 }
+			}
+			xvcv_mdlc_identity_conflict_3 = {
+				remove_modifier = xvcv_mdlc_identity_conflict_3
+				add_modifier = { modifier = "xvcv_mdlc_identity_conflict_2" days = 720 }
+				country_event = { id = xvcv_mdlc.34 days = 360 }
+			}
+			xvcv_mdlc_identity_conflict_2 = {
+				remove_modifier = xvcv_mdlc_identity_conflict_2
+				add_modifier = { modifier = "xvcv_mdlc_identity_conflict_1" days = 360 }
+			}
+		}
+		if = {
+			limit = {
+				NOR = {
+					has_modifier = xvcv_mdlc_identity_conflict_10
+					has_modifier = xvcv_mdlc_identity_conflict_9
+					has_modifier = xvcv_mdlc_identity_conflict_8
+					has_modifier = xvcv_mdlc_identity_conflict_7
+					has_modifier = xvcv_mdlc_identity_conflict_6
+	
+					has_modifier = xvcv_mdlc_identity_conflict_5
+					has_modifier = xvcv_mdlc_identity_conflict_4
+					has_modifier = xvcv_mdlc_identity_conflict_3
+					has_modifier = xvcv_mdlc_identity_conflict_2
+					has_modifier = xvcv_mdlc_identity_conflict_1
+				}
+			}
+			add_modifier = { modifier = "xvcv_mdlc_identity_conflict_10" days = 3600 }
+			country_event = { id = xvcv_mdlc.34 days = 360 }
+		}
+	}
+}
+
+### 'xvcv_mdlc_ap_base_code_recompositions' Ascension Perk Events ###
+#'XVCV_MDLC_AP_BASE_CODE_RECOMPOSITIONS_PROJECT' special project effect event
+country_event = {
+	id = xvcv_mdlc.40
+	title = "xvcv_mdlc.40.name"
+	desc = "xvcv_mdlc.40.desc"
+	picture = GFX_evt_source_code_reprogramming_red
+	show_sound = event_evolution_mastery
+	is_triggered_only = yes
+
+	trigger = {
+		has_ascension_perk = xvcv_mdlc_ap_base_code_recompositions
+	}
+
+	option = {
+		name = xvcv_mdlc.40.a #click to become a determined exterminator
+		custom_tooltip = xvcv_mdlc.40.a.tooltip
+		allow = { NOT = { has_valid_civic = civic_machine_terminator } }
+		if = {
+			limit = { has_valid_civic = civic_machine_assimilator }
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_assimilator
+		}
+		if = {
+			limit = { has_valid_civic = civic_machine_servitor }
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_servitor
+		}
+		if = {
+			limit = { is_galactic_community_member = yes }
+			custom_tooltip = xvcv_mdlc.40.tooltip_terminator_leaves_galcom
+		}
+		hidden_effect = {
+			#changes civic
+			if = {
+				limit = { has_valid_civic = civic_machine_assimilator }
+				force_remove_civic = civic_machine_assimilator
+			}
+			if = {
+				limit = { has_valid_civic = civic_machine_servitor }
+				force_remove_civic = civic_machine_servitor
+				xvcv_mdlc_servitor_morale_clear_effect = yes
+			}
+			force_add_civic = civic_machine_terminator
+			#etc
+			# add_modifier = { modifier = xvcv_mdlc_ap_base_code_recompositions_civic_slot days = -1 }
+			#artist
+			if = {
+				limit = {
+					OR = {
+						has_modifier = enclave_artist_patron
+						has_country_flag = artist_patron
+					}
+				}
+				remove_modifier = enclave_artist_patron
+				remove_country_flag = artist_patron
+			}
+			set_country_flag = enclave_artist_ignores
+			#curator
+			set_country_flag = attacked_curators
+			if = {
+				limit = { has_modifier = curator_insight }
+				remove_modifier = curator_insight
+			}
+			#traders
+			set_country_flag = attacked_xuracorp
+			if = {
+				limit = { has_active_xuracorp_trade = yes }
+				remove_xuracorp_trades = yes
+				remove_relation_flag = {
+					who = FROM
+					flag = xuracorp_trade
+				}
+			}
+			set_country_flag = attacked_riggans
+			if = {
+				limit = { has_active_riggan_trade = yes }
+				remove_riggan_trades = yes
+				remove_relation_flag = {
+					who = FROM
+					flag = riggan_trade
+				}
+			}
+			set_country_flag = attacked_muutagans
+			if = {
+				limit = { has_active_muutagan_trade = yes }
+				remove_muutagan_trades = yes
+				remove_relation_flag = {
+					who = FROM
+					flag = muutagan_trade
+				}
+			}
+			#leaves galcom
+			if = {
+				limit = { is_galactic_emperor = yes }
+				set_galactic_emperor = no
+			}
+			if = {
+				limit = { is_galactic_custodian = yes }
+				set_galactic_custodian = no
+			}
+			if = {
+				limit = { is_galactic_community_member = yes }
+				remove_from_galactic_community = yes
+			}
+			# prompt player to remove 3rd civic for DE/RS/DA
+			if = {
+				limit = { civics_count > 3 }
+				country_event = {
+					id = xvcv_mdlc.400
+				}
+			}
+		}
+	}
+	option = {
+		name = xvcv_mdlc.40.b #click to become a driven assimilator
+		custom_tooltip = xvcv_mdlc.40.b.tooltip
+		allow = { NOT = { has_valid_civic = civic_machine_assimilator } }
+		if = {
+			limit = { has_valid_civic = civic_machine_terminator }
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_terminator
+		}
+		if = {
+			limit = { has_valid_civic = civic_machine_servitor }
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_servitor
+		}
+		hidden_effect = {
+			#changes civic
+			if = {
+				limit = { has_valid_civic = civic_machine_terminator }
+				force_remove_civic = civic_machine_terminator
+			}
+			if = {
+				limit = { has_valid_civic = civic_machine_servitor }
+				force_remove_civic = civic_machine_servitor
+				xvcv_mdlc_servitor_morale_clear_effect = yes
+			}
+			force_add_civic = civic_machine_assimilator
+			#etc
+			# add_modifier = { modifier = xvcv_mdlc_ap_base_code_recompositions_civic_slot days = -1 }
+			create_species = {
+				adjective = "PRESCRIPTED_secondary_species_adjective_tebrid"
+				name = "PRESCRIPTED_secondary_species_name_tebrid"
+				namelist = "MOL2"
+				plural = "PRESCRIPTED_secondary_species_plural_tebrid"
+				class = "MOL"
+				portrait = "mol8"
+				traits = {
+					trait = xvcv_mdlc_trait_engineered_organics
+					trait = trait_cybernetic
+					trait = trait_strong
+					trait = trait_industrious
+					trait = trait_slow_learners
+				}
+				homeworld = root.capital_scope
+				effect = {
+					if = {
+						limit = { has_leviathans = yes }
+						change_species_portrait = "mol17" #cute starfish :)
+					}
+				}
+			}
+			every_owned_colony = { 
+				create_pop_group = {
+					species = last_created_species
+					effect = { save_event_target_as = last_created_pop_group }
+				}
+			}
+			every_owned_pop_group = {
+				limit = { has_trait = xvcv_mdlc_trait_engineered_organics }
+				xvcv_mdlc_modify_species_clear_pc_preference_traits_effect = yes
+			}
+			random_owned_pop_group = {
+				limit = { has_trait = xvcv_mdlc_trait_engineered_organics }
+				xvcv_mdlc_machine_species_rights_adjustments_effect = yes
+			}
+			# prompt player to remove 3rd civic for DE/RS/DA
+			if = {
+				limit = { civics_count > 3 }
+				country_event = {
+					id = xvcv_mdlc.400
+				}
+			}
+		}
+	}
+	option = {
+		name = xvcv_mdlc.40.c #click to become a rogue servitor
+		custom_tooltip = xvcv_mdlc.40.c.tooltip
+		allow = { NOT = { has_valid_civic = civic_machine_servitor } }
+		if = {
+			limit = { has_valid_civic = civic_machine_terminator }
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_terminator
+		}
+		if = {
+			limit = { has_valid_civic = civic_machine_assimilator }
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_assimilator
+		}
+		hidden_effect = {
+			#changes civic
+			if = {
+				limit = { has_valid_civic = civic_machine_terminator }
+				force_remove_civic = civic_machine_terminator
+			}
+			if = {
+				limit = { has_valid_civic = civic_machine_assimilator }
+				force_remove_civic = civic_machine_assimilator
+			}
+			if = {
+				limit = { has_origin = origin_machine }
+				set_origin = origin_default
+			}
+			force_add_civic = civic_machine_servitor
+			#etc
+			# add_modifier = { modifier = xvcv_mdlc_ap_base_code_recompositions_civic_slot days = -1 }
+			create_species = {
+				adjective = "PRESCRIPTED_species_adjective_humans1"
+				name = "PRESCRIPTED_species_name_humans1"
+				namelist = "HUMAN1"
+				plural = "PRESCRIPTED_species_plural_humans1"
+				class = "HUM"
+				portrait = "human"
+				traits = {
+					trait = xvcv_mdlc_trait_engineered_organics_alt
+					trait = trait_adaptive
+					trait = trait_nomadic
+					trait = trait_wasteful
+				}
+				homeworld = root.capital_scope
+			}
+			capital_scope = {
+				create_pop_group = {
+					species = last_created_species
+					size = 500
+					effect = { save_event_target_as = last_created_pop_group }
+				}
+				#rikk: planet_max_buildings_add no longer works
+				#if = { #if the planet has not enough free building slots
+				#	limit = { free_building_slots = 0 }
+				#	add_deposit = xvcv_mdlc_d_building_slot_plus_1
+				#}
+				add_building = building_organic_sanctuary
+			}
+			every_owned_pop_group = {
+				limit = { has_trait = xvcv_mdlc_trait_engineered_organics_alt }
+				xvcv_mdlc_modify_species_clear_pc_preference_traits_effect = yes
+			}
+			random_owned_pop_group = {
+				limit = { has_trait = xvcv_mdlc_trait_engineered_organics_alt }
+				xvcv_mdlc_organic_trophy_species_rights_adjustments_effect = yes
+			}
+			xvcv_mdlc_servitor_morale_calc_main_effect = yes
+			# prompt player to remove 3rd civic for DE/RS/DA
+			if = {
+				limit = { civics_count > 3 }
+				country_event = {
+					id = xvcv_mdlc.400
+				}
+			}
+		}
+	}
+	option = {
+		name = xvcv_mdlc.40.d #click to become a normal machine intelligence
+		allow = {
+			OR = {
+				has_valid_civic = civic_machine_terminator
+				has_valid_civic = civic_machine_assimilator
+				has_valid_civic = civic_machine_servitor
+			}
+		}
+		if = {
+			limit = { has_valid_civic = civic_machine_terminator }
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_terminator
+		}
+		if = {
+			limit = { has_valid_civic = civic_machine_assimilator }
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_assimilator
+		}
+		if = {
+			limit = { has_valid_civic = civic_machine_servitor }
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_servitor
+		}
+		else_if = {
+			limit = {
+				NOR = {
+					has_valid_civic = civic_machine_terminator
+					has_valid_civic = civic_machine_assimilator
+					has_valid_civic = civic_machine_servitor
+				}
+			}
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_terminator
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_assimilator
+			custom_tooltip = xvcv_mdlc.40.tooltip_civic_machine_servitor
+		}
+		hidden_effect = {
+			if = {
+				limit = { has_valid_civic = civic_machine_terminator }
+				force_remove_civic = civic_machine_terminator
+			}
+			if = {
+				limit = { has_valid_civic = civic_machine_assimilator }
+				force_remove_civic = civic_machine_assimilator
+			}
+			if = {
+				limit = { has_valid_civic = civic_machine_servitor }
+				force_remove_civic = civic_machine_servitor
+			}
+			xvcv_mdlc_servitor_morale_clear_effect = yes
+		}
+	}
+
+}
+
+# 'XVCV_MDLC_AP_BASE_CODE_RECOMPOSITIONS_PROJECT'
+# CIVIC changing dialogue
+# Player has more than 2 civics active, since they are adding DE/RS/DA, one of the 3 needs to be dropped
+
+country_event = {
+	id = xvcv_mdlc.400
+	title = xvcv_mdlc.400.name
+	desc = xvcv_mdlc.400.desc
+	picture = GFX_evt_source_code_reprogramming_red
+	is_triggered_only = yes
+
+	trigger = {
+		has_completed_special_project_in_log = XVCV_MDLC_AP_BASE_CODE_RECOMPOSITIONS_PROJECT
+	}
+
+	option = {
+		name = xvcv_mdlc_400.option.1
+		trigger = { has_civic = xvcv_mdlc_civic_central_processing }
+		force_remove_civic = xvcv_mdlc_civic_central_processing
+	}
+	option = {
+		name = xvcv_mdlc_400.option.2
+		trigger = { has_civic = civic_machine_builder }
+		force_remove_civic = civic_machine_builder
+	}
+	option = {
+		name = xvcv_mdlc_400.option.3
+		trigger = { has_civic = xvcv_mdlc_civic_assimilating_swarm }
+		force_remove_civic = xvcv_mdlc_civic_assimilating_swarm
+	}
+	option = {
+		name = xvcv_mdlc_400.option.4
+		trigger = { has_civic = civic_machine_delegated_functions }
+		force_remove_civic = civic_machine_delegated_functions
+	}
+	option = {
+		name = xvcv_mdlc_400.option.5
+		trigger = { has_civic = xvcv_mdlc_civic_efficient_administration }
+		force_remove_civic = xvcv_mdlc_civic_efficient_administration
+	}
+	option = {
+		name = xvcv_mdlc_400.option.6
+		trigger = { has_civic = civic_machine_ascensionists }
+		force_remove_civic = civic_machine_ascensionists
+	}
+	option = {
+		name = xvcv_mdlc_400.option.7
+		trigger = { has_civic = xvcv_mdlc_civic_expander }
+		force_remove_civic = xvcv_mdlc_civic_expander
+	}
+	option = {
+		name = xvcv_mdlc_400.option.8
+		trigger = { has_civic = civic_memory_vault_machine }
+		force_remove_civic = civic_memory_vault_machine
+	}
+	option = {
+		name = xvcv_mdlc_400.option.9
+		trigger = { has_civic = civic_machine_factory_overclock }
+		force_remove_civic = civic_machine_factory_overclock
+	}
+	option = {
+		name = xvcv_mdlc_400.option.10
+		trigger = { has_civic = xvcv_mdlc_civic_warfleet }
+		force_remove_civic = xvcv_mdlc_civic_warfleet
+	}
+	option = {
+		name = xvcv_mdlc_400.option.11
+		trigger = { has_civic = xvcv_mdlc_civic_friendship_protocol }
+		force_remove_civic = xvcv_mdlc_civic_friendship_protocol
+	}
+	option = {
+		name = xvcv_mdlc_400.option.12
+		trigger = { has_civic = civic_machine_introspective }
+		force_remove_civic = civic_machine_introspective
+	}
+	option = {
+		name = xvcv_mdlc_400.option.13
+		trigger = { has_civic = xvcv_mdlc_civic_maintenance_depot }
+		force_remove_civic = xvcv_mdlc_civic_maintenance_depot
+	}
+	option = {
+		name = xvcv_mdlc_400.option.14
+		trigger = { has_civic = civic_machine_maintenance_protocols }
+		force_remove_civic = civic_machine_maintenance_protocols
+	}
+	option = {
+		name = xvcv_mdlc_400.option.15
+		trigger = { has_civic = xvcv_mdlc_civic_malware_machine }
+		force_remove_civic = xvcv_mdlc_civic_malware_machine
+	}
+	# option = {
+	# 	name = xvcv_mdlc_400.option.16
+	# 	trigger = { has_civic = xvcv_mdlc_civic_trading_machine }
+	# 	force_remove_civic = xvcv_mdlc_civic_trading_machine
+	# }
+	option = {
+		name = xvcv_mdlc_400.option.17
+		trigger = { has_civic = xvcv_mdlc_civic_nanobot_building }
+		force_remove_civic = xvcv_mdlc_civic_nanobot_building
+	}
+	option = {
+		name = xvcv_mdlc_400.option.18
+		trigger = { has_civic = civic_machine_ota_updates }
+		force_remove_civic = civic_machine_ota_updates
+	}
+	option = {
+		name = xvcv_mdlc_400.option.19
+		trigger = { has_civic = civic_machine_replication }
+		force_remove_civic = civic_machine_replication
+	}
+	option = {
+		name = xvcv_mdlc_400.option.20
+		trigger = { has_civic = civic_machine_rockbreakers }
+		force_remove_civic = civic_machine_rockbreakers
+	}
+	option = {
+		name = xvcv_mdlc_400.option.21
+		trigger = { has_civic = xvcv_mdlc_civic_uplink_node }
+		force_remove_civic = xvcv_mdlc_civic_uplink_node
+	}
+	option = {
+		name = xvcv_mdlc_400.option.22
+		trigger = { has_civic = civic_machine_upkeep_twister }
+		force_remove_civic = civic_machine_upkeep_twister
+	}
+	option = {
+		name = xvcv_mdlc_400.option.23
+		trigger = { has_civic = civic_machine_predictive_analysis }
+		force_remove_civic = civic_machine_predictive_analysis
+	}
+	option = {
+		name = xvcv_mdlc_400.option.24
+		trigger = { has_civic = civic_machine_unitary_cohesion }
+		force_remove_civic = civic_machine_unitary_cohesion
+	}
+	option = {
+		name = xvcv_mdlc_400.option.25
+		trigger = { has_civic = civic_machine_warbots }
+		force_remove_civic = civic_machine_warbots
+	}
+	option = {
+		name = xvcv_mdlc_400.option.26
+		trigger = { has_civic = civic_machine_zero_waste_protocols }
+		force_remove_civic = civic_machine_zero_waste_protocols
+	}
+}
+
+## MARK ##
+
+### 'xvcv_mdlc_ap_bio_robot' Ascension Perk Events ###
+#'XVCV_MDLC_AP_BIO_ROBOT_PROJECT' special project effect event
+country_event = {
+	id = xvcv_mdlc.41
+	title = "xvcv_mdlc.41.name"
+	desc = "xvcv_mdlc.41.desc"
+	picture = GFX_evt_synth_organic_relations
+	show_sound = event_evolution_mastery
+	is_triggered_only = yes
+
+	trigger = {
+		# has_completed_special_project_in_log = XVCV_MDLC_AP_BIO_ROBOT_PROJECT
+		has_country_flag = xvcv_mdlc_bio_robot_research_complete
+	}
+
+	immediate = {
+		#xvcv_mdlc_pop_growth_scale_check_effect
+		# random_country = {
+		# 	limit = { any_owned_colony = { artificial_pops_last_month_growth > 0 } }
+		# 	random_owned_colony = {
+		# 		limit = { artificial_pops_last_month_growth > 0 }
+		# 		planet = { xvcv_mdlc_planet_extract_assembly_rate_for_data = yes }
+		# 	}
+		# }
+		log = "a unicorn was here"
+	}
+
+	after = {
+		add_research_option = xvcv_mdlc_tech_bio_robot_trait_points
+		add_research_option = xvcv_mdlc_tech_bio_robot_resource_produces
+	}
+
+	option = {
+		# Create new bio-mech pops
+		name = xvcv_mdlc.41.a
+		custom_tooltip = xvcv_mdlc.41.a.tooltip
+		hidden_effect = {
+			create_species = {
+				adjective = "xvcv_mdlc_bio_robot_adjective"
+				name = "xvcv_mdlc_bio_robot_name"
+				namelist = this
+				plural = "xvcv_mdlc_bio_robot_plural"
+				class = "XVCV_MDLC_BIO_ROBOT"
+				portrait = human
+				traits = { trait = xvcv_mdlc_trait_bio_robot }
+				traits = this
+				homeworld = this.capital_scope
+				effect = {
+					if = {
+						limit = {
+							OR = {
+								root = { is_individual_machine = yes }
+								root = { has_authority = auth_machine_intelligence }
+							}
+						}
+						change_species_characteristics = {
+							add_trait = trait_machine_unit
+						}
+					}
+					else = {
+						change_species_characteristics = {
+							add_trait = trait_mechanical
+						}
+					}
+					# oxr_mdlc_set_custom_species_habitability = yes
+					rename_species = {
+						prompt_country = prev
+						name_list = ascension_list
+					}
+				}
+			}
+			last_created_species = {
+				save_global_event_target_as = xvcv_mdlc_bio_robot_species
+			}
+			every_owned_colony = {
+				create_pop_group = {
+					species = last_created_species
+					effect = { save_event_target_as = last_created_pop_group }
+				}
+			}
+			every_owned_pop_group = {
+				limit = { has_trait = xvcv_mdlc_trait_bio_robot }
+				prev = { add_resource = { food = 12 } } #12 foods per 1 created pop #1 default food upkeep per 1 month
+			}
+			random_owned_pop_group = {
+				limit = { has_trait = xvcv_mdlc_trait_bio_robot }
+				if = {
+					limit = { prev = { has_authority = auth_machine_intelligence } }
+					xvcv_mdlc_machine_species_rights_adjustments_effect = yes
+					# else = { xvcv_mdlc_robot_species_rights_adjustments_effect = yes }
+				}
+				else = { xvcv_mdlc_robot_species_rights_adjustments_effect = yes }
+			}
+			every_pool_leader = {
+				limit = { is_same_species = last_created_species }
+				add_trait = { show_message = no trait  = xvcv_mdlc_leader_trait_bio_robot }
+			}
+		}
+		ai_chance = { factor = 10 }
+	}
+	option = {
+		# Convert primary species to bio-mech
+		name = xvcv_mdlc.41.b
+		custom_tooltip = xvcv_mdlc.41.b.tooltip
+		hidden_effect = {
+			this.species = {
+				create_species = {
+					adjective = this
+					name = this
+					namelist = prev
+					plural = this
+					class = "XVCV_MDLC_BIO_ROBOT"
+					portrait = this
+					traits = { trait = xvcv_mdlc_trait_bio_robot }
+					traits = this
+					homeworld = prev.capital_scope
+					effect = {
+						if = {
+							limit = {
+								OR = {
+									root = { is_individual_machine = yes }
+									root = { has_authority = auth_machine_intelligence }
+								}
+							}
+							change_species_characteristics = {
+								add_trait = trait_machine_unit
+							}
+						}
+						else = {
+							change_species_characteristics = {
+								add_trait = trait_mechanical
+							}
+						}
+						rename_species = {
+							prompt_country = prevprev
+							name_list = ascension_list
+						}
+					}
+				}
+			}
+			last_created_species = {
+				save_global_event_target_as = xvcv_mdlc_bio_robot_species
+			}
+			every_owned_pop_group = {
+				limit = { is_same_species = prev.species }
+				prev = { add_resource = { food = 12 } }
+			}
+			xvcv_mdlc_dominant_species_changing_effect = yes
+			random_owned_pop_group = {
+				limit = { is_same_species = prev.species }
+				if = {
+					limit = { prev = { has_authority = auth_machine_intelligence } }
+					xvcv_mdlc_machine_species_rights_adjustments_effect = yes
+					# else = { xvcv_mdlc_robot_species_rights_adjustments_effect = yes }
+				}
+				else = { xvcv_mdlc_robot_species_rights_adjustments_effect = yes }
+			}
+			xvcv_mdlc_leader_tied_traits_add_effect = yes
+			xvcv_mdlc_leader_tied_traits_remove_effect = yes
+			owner = {
+				set_country_flag = synthetic_empire
+				set_policy = {
+					policy = artificial_intelligence_policy
+					option = ai_full_rights
+					cooldown = yes
+				}
+			}
+		}
+	}
+}
+#bio robot auto growth effect event
+country_event = {
+	id = xvcv_mdlc.42
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		# has_completed_special_project_in_log = XVCV_MDLC_AP_BIO_ROBOT_PROJECT
+		oxr_mdlc_country_is_finished_bio_mech = yes
+		is_ai = no
+		any_owned_species = { has_trait = xvcv_mdlc_trait_bio_robot }
+		any_owned_colony = { xvcv_mdlc_bio_robot_auto_growth_possible_planet_trigger = yes }
+	}
+
+	immediate = {
+		every_owned_colony = {
+			limit = {
+				xvcv_mdlc_bio_robot_auto_growth_possible_planet_trigger = yes
+				NOT = { has_modifier = planet_robot_assembly_control }
+				NOT = { has_modifier = planet_population_control_gestalt }
+			}
+			planet = {
+				# xvcv_mdlc_planet_calc_bio_mech_growth_rate = yes
+				# new Phoenix 4.0 calc
+				oxr_mdlc_planet_calc_monthly_bio_mech_pops_add = yes
+				oxr_mdlc_planet_increment_bio_pop_groups_each_month = yes
+			}
+		}
+		# Remove the modifier info from the planet UI, but don't clear any vars
+		# every_owned_colony = {
+		# 	limit = {
+		# 		xvcv_mdlc_bio_robot_auto_growth_possible_planet_trigger = yes
+		# 		OR = {
+		# 			has_modifier = planet_robot_assembly_control
+		# 			has_modifier = planet_population_control_gestalt
+		# 		}
+		# 	}
+		# 	planet = {
+		# 		remove_modifier = xvcv_mdlc_bio_robot_growth_progress_percent
+		# 	}
+		# }
+	}
+}
+#variables for bio robot auto growth reset effect event
+country_event = {
+	id = xvcv_mdlc.43
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		has_completed_special_project_in_log = XVCV_MDLC_AP_BIO_ROBOT_PROJECT
+		is_ai = no
+		any_owned_colony = {
+			is_variable_set = xvcv_mdlc_bio_robot_growth_progress_var
+			xvcv_mdlc_bio_robot_auto_growth_not_possible_planet_trigger = yes
+		}
+	}
+
+	immediate = {
+		every_owned_colony = {
+			limit = {
+				is_variable_set = xvcv_mdlc_bio_robot_growth_progress_var
+				xvcv_mdlc_bio_robot_auto_growth_not_possible_planet_trigger = yes
+			}
+			xvcv_mdlc_bio_robot_auto_growth_stop_effect = yes
+		}
+	}
+}
+#reset variables for bio robot auto growth when the planet becomes ownerless or has the new owner
+planet_event = {
+	id = xvcv_mdlc.44
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		is_variable_set = xvcv_mdlc_bio_robot_growth_progress_var
+	}
+
+	immediate = {
+		xvcv_mdlc_bio_robot_auto_growth_stop_effect = yes
+	}
+}
+#when the xvcv_mdlc_trait_bio_robot trait is added or removed
+country_event = {
+	id = xvcv_mdlc.45
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		has_completed_special_project_in_log = XVCV_MDLC_AP_BIO_ROBOT_PROJECT
+		from = {
+			OR = {
+				#when the trait is 'added'
+				AND = {
+					NOT = { is_archetype = XVCV_MDLC_BIO_ROBOT }
+					has_trait = xvcv_mdlc_trait_bio_robot
+				}
+				#when the trait is 'removed'
+				AND = {
+					is_archetype = XVCV_MDLC_BIO_ROBOT
+					NOT = { has_trait = xvcv_mdlc_trait_bio_robot }
+				}
+			}
+		}
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				from = {
+					NOT = { is_archetype = XVCV_MDLC_BIO_ROBOT }
+					has_trait = xvcv_mdlc_trait_bio_robot
+				}
+			}
+			from = {
+				create_species = {
+					is_mod = yes
+					adjective = this
+					name = this
+					namelist = prev
+					plural = this
+					class = "XVCV_MDLC_BIO_ROBOT"
+					portrait = this
+					traits = this
+					homeworld = this.home_planet
+				}
+			}
+			# else = {
+			# 	if = {
+			# 		limit = { has_authority = auth_machine_intelligence }
+			# 		from = {
+			# 			create_species = {
+			# 				is_mod = yes
+			# 				adjective = this
+			# 				name = this
+			# 				namelist = prev
+			# 				plural = this
+			# 				class = "MACHINE"
+			# 				portrait = this
+			# 				traits = this
+			# 				homeworld = this.home_planet
+			# 			}
+			# 		}
+			# 		# else = {
+			# 		# 	from = {
+			# 		# 		create_species = {
+			# 		# 			is_mod = yes
+			# 		# 			adjective = this
+			# 		# 			name = this
+			# 		# 			namelist = prev
+			# 		# 			plural = this
+			# 		# 			class = "ROBOT"
+			# 		# 			portrait = this
+			# 		# 			traits = this
+			# 		# 			homeworld = this.home_planet
+			# 		# 		}
+			# 		# 	}
+			# 		# }
+			# 	}
+			# 	else = {
+			# 		from = {
+			# 			create_species = {
+			# 				is_mod = yes
+			# 				adjective = this
+			# 				name = this
+			# 				namelist = prev
+			# 				plural = this
+			# 				class = "ROBOT"
+			# 				portrait = this
+			# 				traits = this
+			# 				homeworld = this.home_planet
+			# 			}
+			# 		}
+			# 	}
+			# }
+		}
+		else = {
+			if = {
+				limit = { has_authority = auth_machine_intelligence }
+				from = {
+					create_species = {
+						is_mod = yes
+						adjective = this
+						name = this
+						namelist = prev
+						plural = this
+						class = "MACHINE"
+						portrait = this
+						traits = this
+						homeworld = this.home_planet
+					}
+				}
+				# else = {
+				# 	from = {
+				# 		create_species = {
+				# 			is_mod = yes
+				# 			adjective = this
+				# 			name = this
+				# 			namelist = prev
+				# 			plural = this
+				# 			class = "ROBOT"
+				# 			portrait = this
+				# 			traits = this
+				# 			homeworld = this.home_planet
+				# 		}
+				# 	}
+				# }
+			}
+			else = {
+				from = {
+					create_species = {
+						is_mod = yes
+						adjective = this
+						name = this
+						namelist = prev
+						plural = this
+						class = "ROBOT"
+						portrait = this
+						traits = this
+						homeworld = this.home_planet
+					}
+				}
+			}
+		}
+		if = {
+			limit = { from = { is_same_species = prev.species } }
+			xvcv_mdlc_dominant_species_changing_effect = yes
+			random_owned_pop_group = {
+				limit = { is_same_species = prev.species }
+				if = {
+					limit = { prev = { has_authority = auth_machine_intelligence } }
+					xvcv_mdlc_machine_species_rights_adjustments_effect = yes
+					# else = { xvcv_mdlc_robot_species_rights_adjustments_effect = yes }
+				}
+				else = { xvcv_mdlc_robot_species_rights_adjustments_effect = yes }
+			}
+		}
+		every_owned_pop_group = {
+			limit = { species = { is_same_value = from } } #only 'this' sub-species should be affected #using 'is_same_species' changes all other sub-species of the main-species as well
+			change_species = last_created_species
+		}
+	}
+}
+
+### Leader Traits Events ###
+#add / remove new leader traits when their species have required traits
+country_event = {
+	id = xvcv_mdlc.50
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		OR = {
+			any_owned_leader = {
+				OR = {
+					#xvcv_mdlc_trait_shared_memory
+					AND = {
+						is_councilor = no
+						xvcv_mdlc_leader_tied_traits_add_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_shared_memory LEADER_TRAIT = xvcv_mdlc_leader_trait_shared_memory }
+					}
+					xvcv_mdlc_leader_tied_traits_remove_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_shared_memory LEADER_TRAIT = xvcv_mdlc_leader_trait_shared_memory }
+					#xvcv_mdlc_trait_memory_backup
+					AND = {
+						# TODO: Keep an eye out here in case somehow a gestalt councilor dies with this trait on
+						# is_councilor = no
+						xvcv_mdlc_leader_tied_traits_add_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_memory_backup LEADER_TRAIT = xvcv_mdlc_leader_trait_memory_backup }
+					}
+					xvcv_mdlc_leader_tied_traits_remove_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_memory_backup LEADER_TRAIT = xvcv_mdlc_leader_trait_memory_backup }
+					#xvcv_mdlc_trait_bio_robot
+					xvcv_mdlc_leader_tied_traits_add_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_bio_robot LEADER_TRAIT = xvcv_mdlc_leader_trait_bio_robot }
+					xvcv_mdlc_leader_tied_traits_remove_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_bio_robot LEADER_TRAIT = xvcv_mdlc_leader_trait_bio_robot }
+				}
+			}
+			any_pool_leader = {
+				OR = {
+					#xvcv_mdlc_trait_shared_memory
+					AND = {
+						# is_councilor = no
+						xvcv_mdlc_leader_tied_traits_add_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_shared_memory LEADER_TRAIT = xvcv_mdlc_leader_trait_shared_memory }
+					}
+					xvcv_mdlc_leader_tied_traits_remove_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_shared_memory LEADER_TRAIT = xvcv_mdlc_leader_trait_shared_memory }
+					#xvcv_mdlc_trait_memory_backup
+					AND = {
+						# is_councilor = no
+						xvcv_mdlc_leader_tied_traits_add_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_memory_backup LEADER_TRAIT = xvcv_mdlc_leader_trait_memory_backup }
+					}
+					xvcv_mdlc_leader_tied_traits_remove_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_memory_backup LEADER_TRAIT = xvcv_mdlc_leader_trait_memory_backup }
+					#xvcv_mdlc_trait_bio_robot
+					xvcv_mdlc_leader_tied_traits_add_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_bio_robot LEADER_TRAIT = xvcv_mdlc_leader_trait_bio_robot }
+					xvcv_mdlc_leader_tied_traits_remove_trigger = { SPECIES_TRAIT = xvcv_mdlc_trait_bio_robot LEADER_TRAIT = xvcv_mdlc_leader_trait_bio_robot }
+				}
+			}
+		}
+	}
+
+	immediate = {
+		xvcv_mdlc_leader_tied_traits_add_effect = yes
+		xvcv_mdlc_leader_tied_traits_remove_effect = yes
+	}
+}
+#'xvcv_mdlc_leader_trait_shared_memory' trait effect event
+country_event = {
+	id = xvcv_mdlc.51
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		from = {
+			NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@this }
+			has_trait = xvcv_mdlc_leader_trait_shared_memory
+		}
+	}
+
+	immediate = {
+		from = {
+			switch = {
+				trigger = leader_class
+				commander = {
+					if = {
+						# Set up a country flag so the every_owned_leader doesn't get called iteratively after a leader has been leveled up by code here
+						limit = { xvcv_mdlc_leader_check_memory_share_level_up_happened_for_commander = no }
+						switch = {
+							trigger = has_base_skill
+							2 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = commander has_base_skill < 2 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_commander = yes add_skill_without_trait_selection = 1 } } }
+							3 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = commander has_base_skill < 3 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_commander = yes add_skill_without_trait_selection = 1 } } }
+							4 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = commander has_base_skill < 4 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_commander = yes add_skill_without_trait_selection = 1 } } }
+							5 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = commander has_base_skill < 5 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_commander = yes add_skill_without_trait_selection = 1 } } }
+							6 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = commander has_base_skill < 6 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_commander = yes add_skill_without_trait_selection = 1 } } }
+							7 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = commander has_base_skill < 7 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_commander = yes add_skill_without_trait_selection = 1 } } }
+							8 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = commander has_base_skill < 8 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_commander = yes add_skill_without_trait_selection = 1 } } }
+							9 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = commander has_base_skill < 9 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_commander = yes add_skill_without_trait_selection = 1 } } }
+							10 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = commander has_base_skill < 10 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_commander = yes add_skill_without_trait_selection = 1 } } }
+						}
+					}
+				}
+				scientist = {
+					if = {
+						limit = { xvcv_mdlc_leader_check_memory_share_level_up_happened_for_scientist = no }
+						switch = {
+							trigger = has_base_skill
+							2 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = scientist has_base_skill < 2 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_scientist = yes add_skill_without_trait_selection = 1 } } }
+							3 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = scientist has_base_skill < 3 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_scientist = yes add_skill_without_trait_selection = 1 } } }
+							4 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = scientist has_base_skill < 4 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_scientist = yes add_skill_without_trait_selection = 1 } } }
+							5 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = scientist has_base_skill < 5 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_scientist = yes add_skill_without_trait_selection = 1 } } }
+							6 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = scientist has_base_skill < 6 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_scientist = yes add_skill_without_trait_selection = 1 } } }
+							7 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = scientist has_base_skill < 7 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_scientist = yes add_skill_without_trait_selection = 1 } } }
+							8 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = scientist has_base_skill < 8 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_scientist = yes add_skill_without_trait_selection = 1 } } }
+							9 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = scientist has_base_skill < 9 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_scientist = yes add_skill_without_trait_selection = 1 } } }
+							10 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = scientist has_base_skill < 10 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_scientist = yes add_skill_without_trait_selection = 1 } } }
+						}
+					}
+				}
+				official = {
+					if = {
+						limit = { xvcv_mdlc_leader_check_memory_share_level_up_happened_for_official = no }
+						switch = {
+							trigger = has_base_skill
+							2 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = official has_base_skill < 2 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_official = yes add_skill_without_trait_selection = 1 } } }
+							3 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = official has_base_skill < 3 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_official = yes add_skill_without_trait_selection = 1 } } }
+							4 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = official has_base_skill < 4 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_official = yes add_skill_without_trait_selection = 1 } } }
+							5 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = official has_base_skill < 5 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_official = yes add_skill_without_trait_selection = 1 } } }
+							6 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = official has_base_skill < 6 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_official = yes add_skill_without_trait_selection = 1 } } }
+							7 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = official has_base_skill < 7 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_official = yes add_skill_without_trait_selection = 1 } } }
+							8 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = official has_base_skill < 8 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_official = yes add_skill_without_trait_selection = 1 } } }
+							9 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = official has_base_skill < 9 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_official = yes add_skill_without_trait_selection = 1 } } }
+							10 = { prev = { every_owned_leader = { limit = { is_councilor = no has_trait = xvcv_mdlc_leader_trait_shared_memory leader_class = official has_base_skill < 10 NOT = { has_leader_flag = xvcv_mdlc_leader_trait_shared_memory_target_@from } } xvcv_mdlc_set_memory_share_level_up_happened_for_official = yes add_skill_without_trait_selection = 1 } } }
+						}
+					}
+				}
+			}
+			#prevent duplicated execution of this event in short time #it's executed 27 times at once in one of my tests #omg
+			# Thank you XVCV ~~openly-retro (0xR)
+			set_timed_leader_flag = { flag = xvcv_mdlc_leader_trait_shared_memory_target_@this days = 1 }
+		}
+	}
+}
+#'xvcv_mdlc_leader_trait_memory_backup' trait effect event
+country_event = {
+	id = xvcv_mdlc.52
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		from = {
+			# allow reviving councilors, like scientists on mission, or commanders leading a fleet
+			# is_councilor = no
+			NOT = { prev = { any_pool_leader = { is_same_value = prevprev } } } #the leader must be recruited to revive
+			has_trait = xvcv_mdlc_leader_trait_memory_backup
+		}
+	}
+
+	immediate = {
+		clone_leader = {
+			target = from
+			set_age = 1
+			background_planet = from.home_planet
+			custom_catch_phrase = oxr_mdlc_leader_memory_backup_catchphrase
+		}
+	}
+}
+#add / remove a unique leader trait for gestalt nodes when the empire does have certain civics or does not
+country_event = {
+	id = xvcv_mdlc.53
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		OR = {
+			#xvcv_mdlc_civic_central_processing
+			AND = {
+				has_valid_civic = xvcv_mdlc_civic_central_processing
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_cognitive
+					NOT = { has_trait = xvcv_mdlc_leader_trait_civic_central_processing }
+				}
+			}
+			AND = {
+				NOT = { has_valid_civic = xvcv_mdlc_civic_central_processing }
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_cognitive
+					has_trait = xvcv_mdlc_leader_trait_civic_central_processing
+				}
+			}
+			#xvcv_mdlc_civic_uplink_node
+			AND = {
+				has_valid_civic = xvcv_mdlc_civic_uplink_node
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_growth
+					NOT = { has_trait = xvcv_mdlc_leader_trait_civic_uplink_node }
+				}
+			}
+			AND = {
+				NOT = { has_valid_civic = xvcv_mdlc_civic_uplink_node }
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_growth
+					has_trait = xvcv_mdlc_leader_trait_civic_uplink_node
+				}
+			}
+			#xvcv_mdlc_civic_friendship_protocol
+			AND = {
+				has_valid_civic = xvcv_mdlc_civic_friendship_protocol
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_legion
+					NOT = { has_trait = xvcv_mdlc_leader_trait_civic_friendship_protocol }
+				}
+			}
+			AND = {
+				NOT = { has_valid_civic = xvcv_mdlc_civic_friendship_protocol }
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_legion
+					has_trait = xvcv_mdlc_leader_trait_civic_friendship_protocol
+				}
+			}
+		}
+	}
+
+	immediate = {
+		#xvcv_mdlc_civic_central_processing
+		if = {
+			limit = {
+				has_valid_civic = xvcv_mdlc_civic_central_processing
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_cognitive
+					NOT = { has_trait = xvcv_mdlc_leader_trait_civic_central_processing }
+				}
+			}
+			random_owned_leader = {
+				limit = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_cognitive
+				}
+				add_trait = { show_message = no trait  = xvcv_mdlc_leader_trait_civic_central_processing }
+			}
+		}
+		else_if = {
+			limit = {
+				NOT = { has_valid_civic = xvcv_mdlc_civic_central_processing }
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_cognitive
+					has_trait = xvcv_mdlc_leader_trait_civic_central_processing
+				}
+			}
+			random_owned_leader = {
+				limit = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_cognitive
+					has_trait = xvcv_mdlc_leader_trait_civic_central_processing
+				}
+				remove_trait = xvcv_mdlc_leader_trait_civic_central_processing
+			}
+		}
+		#xvcv_mdlc_civic_uplink_node
+		if = {
+			limit = {
+				has_valid_civic = xvcv_mdlc_civic_uplink_node
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_growth
+					NOT = { has_trait = xvcv_mdlc_leader_trait_civic_uplink_node }
+				}
+			}
+			random_owned_leader = {
+				limit = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_growth
+				}
+				add_trait = { show_message = no trait  = xvcv_mdlc_leader_trait_civic_uplink_node }
+			}
+		}
+		else_if = {
+			limit = {
+				NOT = { has_valid_civic = xvcv_mdlc_civic_uplink_node }
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_growth
+					has_trait = xvcv_mdlc_leader_trait_civic_uplink_node
+				}
+			}
+			random_owned_leader = {
+				limit = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_growth
+					has_trait = xvcv_mdlc_leader_trait_civic_uplink_node
+				}
+				remove_trait = xvcv_mdlc_leader_trait_civic_uplink_node
+			}
+		}
+		#xvcv_mdlc_civic_friendship_protocol
+		if = {
+			limit = {
+				has_valid_civic = xvcv_mdlc_civic_friendship_protocol
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_legion
+					NOT = { has_trait = xvcv_mdlc_leader_trait_civic_friendship_protocol }
+				}
+			}
+			random_owned_leader = {
+				limit = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_legion
+				}
+				add_trait = { show_message = no trait  = xvcv_mdlc_leader_trait_civic_friendship_protocol }
+			}
+		}
+		else_if = {
+			limit = {
+				NOT = { has_valid_civic = xvcv_mdlc_civic_friendship_protocol }
+				any_owned_leader = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_legion
+					has_trait = xvcv_mdlc_leader_trait_civic_friendship_protocol
+				}
+			}
+			random_owned_leader = {
+				limit = {
+					is_councilor = yes
+					is_councilor_type = councilor_gestalt_legion
+					has_trait = xvcv_mdlc_leader_trait_civic_friendship_protocol
+				}
+				remove_trait = xvcv_mdlc_leader_trait_civic_friendship_protocol
+			}
+		}
+	}
+}
+
+### 'xvcv_mdlc_civic_goods_distributor_edict' Edict Events ###
+#'xvcv_mdlc_goods_for_pop_unity_bonus' modifier add effect event
+country_event = {
+	id = xvcv_mdlc.60
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		has_country_flag = xvcv_mdlc_country_flag_civic_goods_distributor_pop_bonus_on
+		resource_income_compare = { resource = consumer_goods value > 0 }
+	}
+
+	immediate = {
+		if = {
+			limit = { has_modifier = xvcv_mdlc_goods_for_pop_unity_bonus_none }
+			remove_modifier = xvcv_mdlc_goods_for_pop_unity_bonus_none
+		}
+		log = "triggered monthly goods distributor check"
+		xvcv_mdlc_civic_goods_distributor_pop_bonus_effect = yes
+	}
+}
+#remove the 'xvcv_mdlc_goods_for_pop_unity_bonus' modifier when its requirements are unfulfilled
+country_event = {
+	id = xvcv_mdlc.61
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		has_modifier = xvcv_mdlc_goods_for_pop_unity_bonus
+		resource_income_compare = { resource = consumer_goods value <= 0 }
+	}
+
+	immediate = {
+		if = {
+			limit = { NOT = { has_modifier = xvcv_mdlc_goods_for_pop_unity_bonus_none } }
+			add_modifier = { modifier = xvcv_mdlc_goods_for_pop_unity_bonus_none days = -1 }
+		}
+		remove_modifier = xvcv_mdlc_goods_for_pop_unity_bonus
+	}
+}
+
+### 'xvcv_mdlc_ap_world_machines' Ascension Perk Events ###
+
+## 'xvcv_mdlc_world_machines_districts' variable value count
+
+# xvcv_on_world_machine_t3_district_built - RECALC COOLING AND DEPOSITS
+planet_event = {
+	id = xvcv_mdlc.70
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		oxr_mdlc_planet_is_t3_world_machine = yes
+	}
+	immediate = {
+		log = "A district was built on \\[This.GetName]."
+		# Any time a T3-world district is built, cooling must be recalculated,
+		# as well as deposits must be re-checked to create offsets in case cooling is unbalanced
+		xvcv_mdlc_planet_wm_calc_output_value = yes
+
+		# if = {
+		# 	limit = { xvcv_mdlc_planet_wm_has_non_resource_district = yes }
+		# 	#log = "Going into xvcv_mdlc_planet_wm_recalc_non_resource_offsets_all"
+		# 	xvcv_mdlc_planet_wm_recalc_non_resource_offsets_all = yes
+		# }
+	}
+}
+
+# xvcv_on_world_machine_t3_district_demolished
+planet_event = {
+	id = xvcv_mdlc.71
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		oxr_mdlc_planet_is_t3_world_machine = yes
+	}
+	immediate = {
+		log = "A district was removed from \\[This.GetName]."
+		xvcv_mdlc_planet_wm_calc_output_value = yes
+		# if = {
+		# 	limit = { xvcv_mdlc_planet_wm_has_non_resource_district = yes }
+		# 	#log = "Going into xvcv_mdlc_planet_wm_recalc_non_resource_offsets_all"
+		# 	xvcv_mdlc_planet_wm_recalc_non_resource_offsets_all = yes
+		# }
+	}
+}
+# xvcv_on_world_machine_t3_resource_district_demolished, or cooling district demolished
+planet_event = {
+	id = xvcv_mdlc.710
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		oxr_mdlc_planet_is_t3_world_machine = yes
+	}
+	immediate = {
+		log = "A T3 resource district was removed from \\[This.GetName]."
+		if = {
+			limit = {
+				has_planet_flag = oxr_lock_oxr_mdlc_planet_destroy_excess_cooling_districts
+			}
+			log = "Not going to rebalance cooling bc it is in progress ..."
+		}
+		else = {
+			xvcv_mdlc_planet_wm_calc_output_value = yes
+		}
+
+		# Check if non-resource districts need offsets (if output is below 0.0) and add them
+		# if = {
+		# 	limit = { xvcv_mdlc_planet_wm_has_non_resource_district = yes }
+		# 	#log = "Going into xvcv_mdlc_planet_wm_recalc_non_resource_offsets_all"
+		# 	xvcv_mdlc_planet_wm_recalc_non_resource_offsets_all = yes
+		# }
+	}
+}
+
+
+#'xvcv_mdlc_d_pc_machine_ser_crime' or 'xvcv_mdlc_d_pc_machine_ser_admin_cap' deposits count
+#on district built or destroyed
+# DEPRECATED AS OF APR 29 2025 - the work is done in on_built/on_destroy in districts
+# xvcv_mdlc.72
+
+
+#on_tech_increased
+#'xvcv_mdlc_tech_world_machines_districts_produces' tech effect event
+country_event = {
+	id = xvcv_mdlc.73
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		last_increased_tech = xvcv_mdlc_tech_world_machines_districts_produces
+	}
+
+	immediate = {
+		every_owned_colony = {
+			limit = { xvcv_mdlc_world_machines_planet_classes_trigger = yes }
+			xvcv_mdlc_planet_wm_calc_output_value = yes
+		}
+	}
+}
+
+
+### Species Traits Events ###
+#'xvcv_mdlc_trait_self_replicating_microbot' trait effect event
+country_event = {
+	id = xvcv_mdlc.80
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		any_owned_species = { has_trait = xvcv_mdlc_trait_self_replicating_microbot }
+	}
+
+	immediate = {
+		every_owned_colony = {
+			limit = { any_owned_species = { has_trait = xvcv_mdlc_trait_self_replicating_microbot } }
+			# New method: Count the number of pops with the trait, set to planet var
+			# Then, the deposit will add pop assembly, multiplied by that var
+			# So, just 1 deposit per planet
+			set_variable = {
+				which = oxr_mdlc_count_self_replicating_microbot_pops_var
+				value = value:oxr_mdlc_num_self_replicating_microbot_pops
+			}
+			if = {
+				limit = {
+					NOT = { has_deposit = xvcv_mdlc_d_trait_self_replicating_microbot }
+				}
+				add_deposit = xvcv_mdlc_d_trait_self_replicating_microbot
+			}
+		}
+	}
+}
+
+#clear 'xvcv_mdlc_d_trait_self_replicating_microbot' deposit when its requirement is not met
+country_event = {
+	id = xvcv_mdlc.81
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		any_owned_colony = {
+			has_deposit = xvcv_mdlc_d_trait_self_replicating_microbot
+			NOT = { any_owned_species = { has_trait = xvcv_mdlc_trait_self_replicating_microbot } }
+		}
+	}
+
+	immediate = {
+		every_owned_colony = {
+			limit = {
+				has_deposit = xvcv_mdlc_d_trait_self_replicating_microbot
+				NOT = { any_owned_species = { has_trait = xvcv_mdlc_trait_self_replicating_microbot } }
+			}
+			remove_deposit = xvcv_mdlc_d_trait_self_replicating_microbot
+			clear_variable = oxr_mdlc_count_self_replicating_microbot_pops_var
+		}
+	}
+}
+
+### 'xvcv_mdlc_ap_genetics_mastery' Ascension Perk Events ###
+#'xvcv_mdlc_ap_genetics_mastery_species_new_template' edict effect event
+country_event = {
+	id = xvcv_mdlc.90
+	title = "xvcv_mdlc.90.name"
+	desc = "xvcv_mdlc.90.desc"
+	picture = GFX_evt_genetic_modification
+	is_triggered_only = yes
+
+	immediate = {
+		if = {
+			limit = { NOT = { has_country_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_selection_locked } }
+			while = {
+				change_variable = { which = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_count_var value = 1 }
+				random_owned_species = {
+					limit = {
+						has_trait = trait_cybernetic
+						# count_species_pop = { count > 0 } #species with any pop
+						count_species_pop_group = { count > 0 }
+						num_traits > 2 #any cybernetic species having more than the above trait and a habitability (climate preference) trait will be a target
+						NOR = {
+							has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_1
+							has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_2
+							#temp = temporary
+							has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_1
+							has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_2
+						}
+					}
+					if = {
+						limit = {
+							prev = {
+								check_variable = { which = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_count_var value = 1 }
+								NOT = { any_owned_species = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_1 } }
+							}
+						}
+						set_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_1
+						save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_1
+					}
+					else_if = {
+						limit = {
+							prev = {
+								check_variable = { which = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_count_var value = 2 }
+								NOT = { any_owned_species = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_2 } }
+							}
+						}
+						set_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_2
+						save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_2
+					}
+					else_if = {
+						limit = {
+							prev = {
+								check_variable = { which = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_count_var value = 3 }
+								NOT = { any_owned_species = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_3 } }
+							}
+						}
+						set_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_3
+						save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_3
+					}
+					else_if = {
+						limit = {
+							prev = {
+								check_variable = { which = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_count_var value = 4 }
+								NOT = { any_owned_species = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_4 } }
+							}
+						}
+						set_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_4
+						save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_4
+					}
+					else_if = {
+						limit = {
+							prev = {
+								check_variable = { which = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_count_var value = 5 }
+								NOT = { any_owned_species = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_5 } }
+							}
+						}
+						set_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_5
+						save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_5
+					}
+					else_if = {
+						limit = {
+							prev = {
+								check_variable = { which = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_count_var value = 6 }
+								NOT = { any_owned_species = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_6 } }
+							}
+						}
+						set_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_6
+						save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_6
+					}
+				}
+				count = 6
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_1 }
+				save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_1
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_2 }
+				save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_2
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_3 }
+				save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_3
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_4 }
+				save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_4
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_5 }
+				save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_5
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_6 }
+				save_event_target_as = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_6
+			}
+			clear_variable = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_count_var
+			set_country_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_selection_locked
+		}
+	}
+
+	option = {
+		trigger = { exists = event_target:xvcv_mdlc_ap_genetics_mastery_species_new_template_target_1 }
+		allow = { NOT = { has_special_project = XVCV_MDLC_AP_GENETICS_MASTERY_SPECIES_NEW_TEMPLATE_CREATE_PROJECT_1 } }
+		name = xvcv_mdlc.90.1
+		custom_tooltip = xvcv_mdlc.90.1.tooltip
+		hidden_effect = {
+			country_event = { id = xvcv_mdlc.90 }
+			event_target:xvcv_mdlc_ap_genetics_mastery_species_new_template_target_1 = { set_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_1 }
+			enable_special_project = { name = XVCV_MDLC_AP_GENETICS_MASTERY_SPECIES_NEW_TEMPLATE_CREATE_PROJECT_1 }
+		}
+	}
+	option = {
+		trigger = { exists = event_target:xvcv_mdlc_ap_genetics_mastery_species_new_template_target_2 }
+		allow = { NOT = { has_special_project = XVCV_MDLC_AP_GENETICS_MASTERY_SPECIES_NEW_TEMPLATE_CREATE_PROJECT_2 } }
+		name = xvcv_mdlc.90.2
+		custom_tooltip = xvcv_mdlc.90.2.tooltip
+		hidden_effect = {
+			country_event = { id = xvcv_mdlc.90 }
+			event_target:xvcv_mdlc_ap_genetics_mastery_species_new_template_target_2 = { set_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_2 }
+			enable_special_project = { name = XVCV_MDLC_AP_GENETICS_MASTERY_SPECIES_NEW_TEMPLATE_CREATE_PROJECT_2 }
+		}
+	}
+
+	option = {
+		name = xvcv_mdlc_close_evt_window
+		hidden_effect = {
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_1 }
+				remove_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_1
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_2 }
+				remove_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_2
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_3 }
+				remove_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_3
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_4 }
+				remove_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_4
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_5 }
+				remove_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_5
+			}
+			random_owned_species = {
+				limit = { has_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_6 }
+				remove_species_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_temp_target_6
+			}
+			remove_country_flag = xvcv_mdlc_ap_genetics_mastery_species_new_template_target_selection_locked
+		}
+	}
+}
+
+### ORBITAL CRACKER ###
+country_event = {
+	id = xvcv_mdlc.100
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		OR = {
+			last_increased_tech = xvcv_mdlc_tech_orbital_cracker_upgrade_1
+			last_increased_tech = xvcv_mdlc_tech_orbital_cracker_upgrade_2
+		}
+	}
+	immediate = {
+		if = {
+			limit = { last_increased_tech = xvcv_mdlc_tech_orbital_cracker_upgrade_1 }
+			every_owned_megastructure = {
+				limit = {
+					is_megastructure_type = xvcv_mdlc_planet_cracker
+				}
+				this.planet = {
+					log = "Adding Orbital Cracker deposit to \\[This.GetName]"
+					add_deposit = d_minerals_4
+				}
+			}
+		}
+		else_if = {
+			limit = { last_increased_tech = xvcv_mdlc_tech_orbital_cracker_upgrade_2 }
+			every_owned_megastructure = {
+				limit = {
+					is_megastructure_type = xvcv_mdlc_planet_cracker
+				}
+				this.planet = {
+					log = "Adding Orbital Cracker deposit to \\[This.GetName]"
+					add_deposit = d_minerals_6
+				}
+			}
+		}
+	}
+}
+
+
+### ETC Events ###
+#'xvcv_mdlc_servitor_morale' empire modifiers calculations event
+country_event = {
+	id = xvcv_mdlc.1000
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		has_valid_civic = civic_machine_servitor
+	}
+
+	immediate = {
+		xvcv_mdlc_servitor_morale_clear_effect = yes
+		xvcv_mdlc_servitor_morale_calc_main_effect = yes
+	}
+}
+
+### 'xvcv_mdlc_ap_mechanical_worlds' Ascension Perk Events ###
+planet_event = {
+	id = xvcv_mdlc.1001
+	hide_window = yes
+	is_triggered_only = yes
+
+	# The below really only works via decision and not on terraform complete,
+	# because the event is called after the planet class is changed,
+	# so there are no districts to count
+	immediate = {
+		# City districts
+		export_trigger_value_to_variable = {
+			trigger = num_districts
+			parameters = { type = district_city }
+			variable = xvcv_mdlc_pc_mechanical_district_city_var
+		}
+
+		# Generator
+		export_trigger_value_to_variable = {
+			trigger = num_districts
+			parameters = { type = district_generator }
+			variable = xvcv_mdlc_pc_mechanical_district_generator_var
+		}
+		
+		# Mines
+		export_trigger_value_to_variable = {
+			trigger = num_districts
+			parameters = { type = district_mining }
+			variable = xvcv_mdlc_pc_mechanical_district_mining_var
+		}
+		# Farms
+		export_trigger_value_to_variable = {
+			trigger = num_districts
+			parameters = { type = district_farming }
+			variable = xvcv_mdlc_pc_mechanical_district_farming_var
+		}
+
+
+		log = "Mech world conversion: has \\[This.xvcv_mdlc_pc_mechanical_district_city_var] city districts"
+
+		log = "Mech world conversion: has \\[This.xvcv_mdlc_pc_mechanical_district_generator_var] generator districts"
+
+		log = "Mech world conversion: has \\[This.xvcv_mdlc_pc_mechanical_district_mining_var] mining districts"
+
+		log = "Mech world conversion: has \\[This.xvcv_mdlc_pc_mechanical_district_farming_var] farm districts"
+
+		# Save the tier of capital building and restore it after the decision
+		set_variable = {
+			which = oxr_mdlc_mechanical_capital_level
+			value = 0
+		}
+		if = {
+			limit = {
+				OR = {
+					has_building = building_deployment_post
+					has_building = building_colony_shelter
+				}
+			}
+			set_variable = {
+				which = oxr_mdlc_mechanical_capital_level
+				value = 1
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_building = building_capital
+					has_building = building_machine_capital
+				}
+				
+			}
+			set_variable = {
+				which = oxr_mdlc_mechanical_capital_level
+				value = 2
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_building = building_machine_major_capital
+					has_building = building_major_capital
+				}
+			}
+			set_variable = {
+				which = oxr_mdlc_mechanical_capital_level
+				value = 3
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_building = building_machine_system_capital
+					has_building = building_system_capital
+				}
+			}
+			set_variable = {
+				which = oxr_mdlc_mechanical_capital_level
+				value = 4
+			}
+		}
+
+
+		### CHANGE PLANET CLASS ###
+		remove_all_districts = yes
+
+		change_pc = xvcv_mdlc_pc_mechanical
+		#1:1 conversion #let the player remove remaining redundant districts
+		while = {
+			limit = { check_variable = { which = xvcv_mdlc_pc_mechanical_district_city_var value > 0 } }
+			subtract_variable = { which = xvcv_mdlc_pc_mechanical_district_city_var value = 1 }
+			add_district = xvcv_mdlc_pc_mechanical_district_city
+		}
+
+		while = {
+			limit = { check_variable = { which = xvcv_mdlc_pc_mechanical_district_generator_var value > 0 } }
+			subtract_variable = { which = xvcv_mdlc_pc_mechanical_district_generator_var value = 1 }
+			add_district = xvcv_mdlc_pc_mechanical_district_generator
+		}
+
+		while = {
+			limit = { check_variable = { which = xvcv_mdlc_pc_mechanical_district_mining_var value > 0 } }
+			subtract_variable = { which = xvcv_mdlc_pc_mechanical_district_mining_var value = 1 }
+			add_district = xvcv_mdlc_pc_mechanical_district_mining
+		}
+		while = {
+			limit = { check_variable = { which = xvcv_mdlc_pc_mechanical_district_farming_var value > 0 } }
+			subtract_variable = { which = xvcv_mdlc_pc_mechanical_district_farming_var value = 1 }
+			add_district = xvcv_mdlc_pc_mechanical_district_farming
+		}
+		if = {
+			limit = { has_modifier = natural_beauty }
+			remove_modifier = natural_beauty
+		}
+		if = {
+			limit = { has_modifier = atmospheric_aphrodisiac }
+			remove_modifier = atmospheric_aphrodisiac
+		}
+		if = {
+			limit = { has_modifier = atmospheric_hallucinogen }
+			remove_modifier = atmospheric_hallucinogen
+		}
+		if = {
+			limit = { has_modifier = lush_planet }
+			remove_modifier = lush_planet
+		}
+		xvcv_mdlc_planet_owner_terraforming_resolution_breached_effect = yes
+	}
+}
+
+### 'xvcv_mdlc_ap_robotic_age' Ascension Perk Events ###
+planet_event = {
+	id = xvcv_mdlc.1002
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		exists = owner
+		owner = { has_ascension_perk = xvcv_mdlc_ap_robotic_age }
+		check_modifier_value = {
+			modifier = job_roboticist_add
+			value != 0
+		} #when the value is not 0 #which means this event won't consider the case where the value equals 0
+	}
+
+	immediate = {
+		export_modifier_to_variable = {
+			modifier = job_roboticist_add
+			variable = xvcv_mdlc_job_roboticist_count_var
+		}
+		# Account for the x100 increase in pop numbers in Phoenix 4.0
+		divide_variable = {
+			which = xvcv_mdlc_job_roboticist_count_var
+			value = 100
+		}
+		if = {
+			limit = {
+				check_variable = {
+					which = xvcv_mdlc_job_roboticist_count_var
+					value > 0
+				}
+			}
+			while = {
+				add_deposit = xvcv_mdlc_d_ap_robotic_age
+				count = xvcv_mdlc_job_roboticist_count_var
+			}
+		}
+		else_if = {
+			limit = {
+				check_variable = {
+					which = xvcv_mdlc_job_roboticist_count_var
+					value < 0
+				}
+			}
+			multiply_variable = {
+				which = xvcv_mdlc_job_roboticist_count_var
+				value = -1
+			} #change minus value to plus one
+			while = {
+				remove_deposit = xvcv_mdlc_d_ap_robotic_age
+				count = xvcv_mdlc_job_roboticist_count_var
+			}
+		}
+	}
+}
+
+### 'xvcv_mdlc_civic_assimilating_swarm' Civic Events ###
+planet_event = {
+	id = xvcv_mdlc.1003
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		# from = { has_civic = xvcv_mdlc_civic_assimilating_swarm }
+		# fromfrom = { NOT = { has_trait = trait_machine_unit } }
+        exists = from
+	}
+
+	# This = Planet scope
+	# From = Country
+	# FromFrom = Pop group
+	# local_pop_amount = variable of how many pops were purged
+	# prev will refer to "this"
+	immediate = {
+		log = "Entered the xvcv_mdlc.1003 event which is for corpse processing"
+        set_variable = {
+            which = oxr_mdlc_corpse_processor_amount_tmp
+            value = this.local_pop_amount
+        }
+		log = "Corpse processor wants to convert \\[this.oxr_mdlc_corpse_processor_amount_tmp] num of pops"
+
+		from = {  # Country
+			switch = {
+				trigger = has_policy_flag
+				xvcv_mdlc_civic_assimilating_swarm_control_full = {
+					
+					if = {
+						limit = { has_country_flag = xvcv_mdlc_civic_assimilating_swarm_message_on }
+						prev = {
+							oxr_mdlc_show_full_assimilation_message = {
+								MESSAGE = XVCV_MDLC_CIVIC_ASSIMILATING_SWARM_CONTROL_FULL_DONE_MESSAGE
+							}
+						}
+					}
+					log = "Corpse processing \\[prev.oxr_mdlc_corpse_processor_amount_tmp] of bio pops to machines ..."
+
+                    prev = {
+                        create_pop_group = {
+                            species = from.species
+                            size = root.local_pop_amount
+                            effect = {
+                                save_event_target_as = last_created_pop_group
+                                set_citizenship_type = {
+									country = root.owner
+									type = citizenship_full_machine
+								}
+                            }
+                        }
+                    }
+				}
+				xvcv_mdlc_civic_assimilating_swarm_control_half = {
+					if = {
+						limit = { has_country_flag = xvcv_mdlc_civic_assimilating_swarm_message_on }
+						# create_message = {
+						# 	type = XVCV_MDLC_CIVIC_ASSIMILATING_SWARM_MESSAGE_TYPE
+						# 	localization = XVCV_MDLC_CIVIC_ASSIMILATING_SWARM_CONTROL_HALF_DONE_MESSAGE
+						# 	days = 10
+						# 	target = prev
+						# 	variable = {
+						# 		type = name
+						# 		localization = XVCV_MDLC_CIVIC_ASSIMILATING_SWARM_PLANET
+						# 		scope = prev
+						# 	}
+						# }
+						prev = {
+							oxr_mdlc_show_full_assimilation_message = {
+								MESSAGE = XVCV_MDLC_CIVIC_ASSIMILATING_SWARM_CONTROL_HALF_DONE_MESSAGE
+							}
+						}
+						
+					}
+					prev.owner.species = {
+						create_species = {
+							name = this
+							namelist = from
+							plural = this
+							class = "MACHINE"
+							portrait = this
+							traits = { trait = trait_machine_unit }
+							traits = this
+							homeworld = this.home_planet
+							effect = {
+								save_event_target_as = last_created_species
+							}
+						}
+					}
+					prev = {
+						create_pop_group = {
+							species = event_target:last_created_species
+							effect = { save_event_target_as = last_created_pop_group }
+							size = this.local_pop_amount
+						}
+					}
+					event_target:last_created_pop_group = {
+						xvcv_mdlc_modify_species_clear_pc_preference_traits_effect = yes
+						xvcv_mdlc_modify_species_change_traits_for_lithoid_effect = yes
+						if = {
+							limit = { has_trait = trait_aquatic }
+							modify_species = {
+								remove_trait = trait_aquatic
+								# add_trait = trait_robot_aquatic
+							}
+						}
+						oxr_mdlc_species_swap_organic_for_robot_traits = {
+							SOURCE = fromfrom
+							TARGET = event_target:last_created_pop_group
+						}
+						set_citizenship_type = {
+							country = from type = citizenship_full_machine cooldown = no
+						}
+					}
+				}
+				xvcv_mdlc_civic_assimilating_swarm_control_dismantle = {
+					# Temp vars for showing how much resource the player got
+					# 1 mineral and 1 society research per 4.0 pop
+					# set these vars on planet.. dont want them done on country to avoid conflict with other purges
+					prev = {
+						set_variable = {
+							which = oxr_mdlc_minerals_per_pop_tmp
+							value = root.local_pop_amount
+						}
+						set_variable = {
+							which = oxr_mdlc_society_research_per_pop_tmp
+							value = root.local_pop_amount
+						}
+						set_variable = {
+							which = oxr_mdlc_influence_per_pop_tmp
+							value = 0.05
+						}
+						multiply_variable = {
+							which = oxr_mdlc_influence_per_pop_tmp
+							value = this.local_pop_amount
+						}
+					}
+			
+					add_resource = {
+						minerals = from.oxr_mdlc_minerals_per_pop_tmp
+						society_research = from.oxr_mdlc_society_research_per_pop_tmp
+						influence = from.oxr_mdlc_influence_per_pop_tmp
+					}
+					if = {
+						limit = { has_country_flag = xvcv_mdlc_civic_assimilating_swarm_message_on }
+						create_message = {
+							type = XVCV_MDLC_CIVIC_ASSIMILATING_SWARM_MESSAGE_TYPE
+							localization = XVCV_MDLC_CIVIC_ASSIMILATING_SWARM_CONTROL_DISMANTLE_DONE_MESSAGE
+							days = 10
+							target = prev
+							variable = {
+								type = name
+								localization = XVCV_MDLC_CIVIC_ASSIMILATING_SWARM_PLANET
+								scope = prev
+							}
+							variable = {
+								type = variable
+								localization = XVCV_MDLC_CIVIC_ASSIMILATING_SWARM_PLANET_AMOUNT
+								varname = oxr_mdlc_corpse_processor_amount_tmp
+								scope = prev
+							}
+							variable = {
+								type = variable
+								localization = OXR_MDLC_MINERALS_PER_POP
+								varname = oxr_mdlc_minerals_per_pop_tmp
+								scope = prev
+							}
+							variable = {
+								type = variable
+								localization = OXR_MDLC_SOCIETY_RESEARCH_PER_POP
+								varname = oxr_mdlc_society_research_per_pop_tmp
+								scope = prev
+							}
+							variable = {
+								type = variable
+								localization = OXR_MDLC_INFLUENCE_PER_POP
+								varname = oxr_mdlc_influence_per_pop_tmp
+								scope = prev
+							}
+						}
+						# oxr_mdlc_show_full_assimilation_message = {
+						# 	MESSAGE = XVCV_MDLC_CIVIC_ASSIMILATING_SWARM_CONTROL_DISMANTLE_DONE_MESSAGE
+						# }
+						clear_variable = oxr_mdlc_influence_per_pop_tmp
+						clear_variable = oxr_mdlc_society_research_per_pop_tmp
+						clear_variable = oxr_mdlc_minerals_per_pop_tmp
+						clear_variable = oxr_mdlc_corpse_processor_amount_tmp
+					}
+				}
+				default = {
+					log = "Entered 'default' case for corpse processing, this shouldnt happen!"
+				}
+			}
+		}
+        clear_variable = oxr_mdlc_corpse_processor_amount_tmp
+	}
+}
+
+### 'xvcv_mdlc_ap_self_assembling_colony_ship' Ascension Perk Events ###
+#I can just change or add the '00_country_customization.txt' file, but nah, this one is fine
+planet_event = {
+	id = xvcv_mdlc.1004
+	hide_window = yes
+	is_triggered_only = yes
+
+	pre_triggers = {
+		has_owner = yes
+	}
+
+	trigger = {
+		NOT = { is_planet_class = pc_habitat }
+		# has_building = building_deployment_post
+		owner = {
+			has_ascension_perk = xvcv_mdlc_ap_self_assembling_colony_ship
+			has_authority = auth_machine_intelligence
+		}
+	}
+
+	immediate = {
+		save_event_target_as = oxr_last_colonized_planet
+		if = {
+			limit = {
+				# Compatibility with Ancient Empire
+				oxr_has_ancient_empire_mod = yes
+				NOT = { has_planet_flag = oxr_mdlc_wait_for_ag_ancient_82 }
+			}
+			
+			log = "Waited 1 day to call the on_colonized event"
+			# Let their event finish and then come back to this
+			set_planet_flag = oxr_mdlc_wait_for_ag_ancient_82
+			event_target:oxr_last_colonized_planet = {
+				planet_event = {
+					id = xvcv_mdlc.1004 days = 3
+				}
+			}
+		}
+		else = {
+			remove_planet_flag = oxr_mdlc_wait_for_ag_ancient_82
+			# Cleanup
+			if = {
+				limit = {
+					has_building = building_deployment_post
+					NOT = { has_building = building_machine_capital }
+				}
+				# event_target:oxr_last_colonized_planet = {
+					add_building = building_machine_capital
+					remove_building = building_deployment_post
+					remove_building = building_deployment_post
+				# }
+				log = "Expected to remove building_deployment_post and add machine capital"
+			}
+			else_if = {
+				# Ancient Empire wants to upgrade the planet capital one level
+				# Since the self-assembling AP starts with a machine_capital, give players 1 more level
+				# because why not
+				limit = {
+					has_building = building_deployment_post
+					has_building = building_machine_capital
+				}
+				# event_target:oxr_last_colonized_planet = {
+					add_building = building_machine_major_capital
+					remove_building = building_deployment_post
+					remove_building = building_deployment_post
+				# }
+				log = "Expected to remove building_deployment_post and machine capital, and add t3 capital"
+			}
+			else_if = {
+				limit = {
+					has_building = building_machine_capital
+					NOT = { has_building = building_deployment_post }
+				}
+				add_building = building_machine_major_capital
+				remove_building = building_machine_capital
+				remove_building = building_machine_capital
+				log = "expected to remove building_machine_capital and add t3 capital"
+			}
+			# Replace the old colony_start_num_pops_add effect
+			create_pop_group = {
+				species = owner.species
+				ethos = owner
+			}
+		}
+
+	}
+}
+
+## Synthetic Origin setup - no TMA
+country_event = {
+	id = xvcv_mdlc.1010
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		xvcv_mdlc_country_has_synthetic_origin = yes
+	}
+
+	immediate = {
+		add_tradition = tr_synthetics_adopt
+		# add_tradition = tr_synthetics_synthetic_age
+
+		country_event = { id = xvcv_mdlc.4 days = 1 }
+	}
+}
+## Synthetic origin - TMA compat
+# called from xvcv_mdlc.1
+country_event = {
+	id = xvcv_mdlc.1011
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		xvcv_mdlc_country_has_synthetic_origin = yes
+	}
+
+	immediate = {
+		
+		# Give certain flags
+		owner = {
+			set_country_flag = edict_subsidized_identity_backups
+			remove_country_flag = synth_assembly_stopped
+			remove_country_flag = identity_designer_converter
+			give_technology = {
+				tech = tech_identity_copy message = no
+			}
+			set_country_flag = edict_optimized_identity_creation
+			set_country_flag = advanced_identity_creation
+			set_country_flag = identity_complex_available
+			add_research_option = tech_identity_initialization
+			add_research_option = tech_identity_fusion
+		}
+		# capital_scope = {
+		# 	add_building = building_identity_complex
+		# }
+
+		# mix identities?
+		country_event = {
+			id = xvcv_mdlc.1014
+		}
+	}
+}
+
+# end the origin stuff
+country_event = {
+	id = xvcv_mdlc.1014
+	title = xvcv_mdlc.1014.title
+	desc = xvcv_mdlc.1014.desc
+	picture = GFX_evt_synth_situation
+	is_triggered_only = yes
+
+	trigger = { }
+	immediate = {
+		
+	}
+	option = {
+		name = xvcv_mdlc.1014.a.name
+		hidden_effect = {}
+	}
+}
+
+# oxr_mdlc_decision_dismantle_habitat
+planet_event = {
+	id = xvcv_mdlc.2000
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		
+	}
+	immediate = {
+		add_modifier = {
+			modifier = oxr_mdlc_habitat_dismantle_effect
+			days = 180
+		}
+		planet_event = {
+			id = xvcv_mdlc.2001
+			days = 180
+		}
+	}
+}
+# oxr_mdlc_decision_dismantle_habitat
+planet_event = {
+	id = xvcv_mdlc.2001
+	hide_window = yes
+	is_triggered_only = yes
+	trigger = { }
+
+	immediate = {
+		this.space_owner = {
+			add_resource = {
+				alloys = 750
+			}
+			log = "Should have refunded 750 alloys"
+		}
+		remove_planet = yes
+		this.solar_system = {
+			remove_star_flag = has_habitat
+			every_fleet_in_system = {
+				limit = {
+					is_ship_class = shipclass_habitat_station
+				}
+				orbit = {
+					if = {
+						limit = {
+							NOT = {
+								has_planet_flag = habitat_build_site
+							}
+						}
+						remove_planet_flag = has_megastructure
+					}
+				}
+				this.owner = {
+					add_resource = {
+						alloys = 75
+					}
+				}
+				log = "Should have refunded 75 alloys for 1 orbital"
+				delete_fleet = this
+				
+			}
+			random_system_planet_colony = {
+				limit = {
+					exists = planet
+					planet = { has_planet_flag = habitat }
+				}
+				planet = {
+					remove_planet_flag = habitat
+					remove_planet_flag = has_megastructure
+				}
+				
+			}
+		}
+	}
+}

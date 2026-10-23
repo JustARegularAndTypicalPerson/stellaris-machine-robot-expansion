@@ -1,0 +1,203 @@
+#xvcv_mdlc_leader_making
+xvcv_mdlc_tech_leader_making = {
+	cost = @tier3cost3
+	area = engineering
+	tier = 3
+	category = { industry }
+	prerequisites = { "tech_robomodding_m" }
+	weight = @tier3weight3
+
+	potential = {
+		has_authority = auth_machine_intelligence
+		has_paragon_dlc = yes #pdx requested this
+	}
+
+	prereqfor_desc = {
+		custom = {
+			title = "unlock_edict_xvcv_mdlc_leader_making"
+			desc = "unlock_edict_xvcv_mdlc_leader_making_desc"
+		}
+	}
+}
+xvcv_mdlc_tech_leader_making_improvement = {
+	cost = @tier3cost3
+	area = physics
+	tier = 3
+	category = { computing }
+	prerequisites = { "xvcv_mdlc_tech_leader_making" }
+	weight = @tier3weight3
+
+	modifier = {
+		custom_tooltip = xvcv_mdlc_tech_leader_making_improvement_tooltip
+		# oxr_mdlc_leader_making_bonus_trait_points_add = 1
+		# oxr_mdlc_leader_making_bonus_trait_picks_add = 1
+	}
+}
+xvcv_mdlc_tech_leader_making_improvement_2 = {
+	cost = @tier4cost1
+	area = physics
+	tier = 4
+	category = { computing }
+	prerequisites = { "xvcv_mdlc_tech_leader_making_improvement" }
+	is_rare = yes
+	weight = @tier4weight1
+
+	modifier = {
+		custom_tooltip = xvcv_mdlc_tech_leader_making_improvement_tooltip
+		# oxr_mdlc_leader_making_bonus_trait_points_add = 1
+		# oxr_mdlc_leader_making_bonus_trait_picks_add = 1
+	}
+
+	weight_modifier = {
+		factor = 0.75
+		modifier = {
+			factor = @federation_perk_factor
+			has_federation = yes
+			federation = {
+				has_federation_perk = rare_tech_boost
+				any_member = { has_technology = xvcv_mdlc_tech_leader_making_improvement_2 }
+			}
+		}
+	}
+}
+oxr_mdlc_tech_leader_making_improvement_repeatable = {
+	icon = xvcv_mdlc_tech_leader_making_improvement_repeatable
+	area = physics
+	cost = 250000
+	cost_per_level = 25000
+	tier = @repeatableTechTier
+	category = { computing }
+	levels = -1 #5% x 10 = 50% #use '-1' value for infinite researching
+	weight = @repeatableTechWeight
+
+	potential = {
+		has_authority = auth_machine_intelligence
+		has_paragon_dlc = yes
+		has_country_flag = oxr_mdlc_country_feature_infinite_repeatable_builder_techs
+	}
+	prerequisites = {
+		"xvcv_mdlc_tech_leader_making_improvement_2"
+	}
+
+	weight_modifier = {
+		factor = @repatableTechFactor
+	}
+	
+	ai_weight = {
+		factor = 1.0
+	}
+
+	weight_groups = {
+		repeatable
+	}
+	mod_weight_if_group_picked = {
+		repeatable = 0.01
+	}
+	
+	modifier = {
+		oxr_mdlc_leader_making_bonus_trait_points_add = 3
+		oxr_mdlc_leader_making_bonus_trait_picks_add = 2
+	}
+}
+
+#xvcv_mdlc_core_modifying
+xvcv_mdlc_tech_core_modifying = {
+	cost = @tier3cost3
+	area = engineering
+	tier = 3
+	category = { industry }
+	prerequisites = { "tech_robomodding_m" }
+	weight = @tier3weight3
+	
+	potential = {
+		has_authority = auth_machine_intelligence
+		has_paragon_dlc = yes #pdx requested this
+	}
+
+	prereqfor_desc = {
+		custom = {
+			title = "unlock_edict_xvcv_mdlc_core_modifying"
+			desc = "unlock_edict_xvcv_mdlc_core_modifying_desc"
+		}
+	}
+}
+xvcv_mdlc_tech_core_modifying_improvement = {
+	cost = @tier3cost3
+	area = physics
+	tier = 3
+	category = { computing }
+	prerequisites = { "xvcv_mdlc_tech_core_modifying" }
+	weight = @tier3weight3
+
+	modifier = {
+		custom_tooltip = xvcv_mdlc_tech_core_modifying_improvement_tooltip
+		# oxr_mdlc_core_modifying_bonus_trait_points_add = 1
+		# oxr_mdlc_core_modifying_bonus_trait_picks_add = 1
+	}
+}
+xvcv_mdlc_tech_core_modifying_improvement_2 = {
+	cost = @tier4cost1
+	area = physics
+	tier = 4
+	category = { computing }
+	prerequisites = { "xvcv_mdlc_tech_core_modifying_improvement" }
+	is_rare = yes
+	weight = @tier4weight1
+
+	modifier = {
+		custom_tooltip = xvcv_mdlc_tech_core_modifying_improvement_tooltip
+		# oxr_mdlc_core_modifying_bonus_trait_points_add = 1
+		# oxr_mdlc_core_modifying_bonus_trait_picks_add = 1
+	}
+
+	weight_modifier = {
+		factor = 0.75
+		modifier = {
+			factor = @federation_perk_factor
+			has_federation = yes
+			federation = {
+				has_federation_perk = rare_tech_boost
+				any_member = { has_technology = xvcv_mdlc_tech_core_modifying_improvement_2 }
+			}
+		}
+	}
+}
+oxr_mdlc_tech_core_modifying_improvement_repeatable = {
+	icon = xvcv_mdlc_tech_core_modifying_improvement_repeatable
+	area = physics
+	cost = 250000
+	cost_per_level = 25000
+	tier = @repeatableTechTier
+	category = { computing }
+	levels = -1 #5% x 10 = 50% #use '-1' value for infinite researching
+	weight = @repeatableTechWeight
+
+	potential = {
+		has_authority = auth_machine_intelligence
+		has_paragon_dlc = yes
+		has_country_flag = oxr_mdlc_country_feature_infinite_repeatable_builder_techs
+	}
+	prerequisites = {
+		"xvcv_mdlc_tech_leader_making_improvement_2"
+	}
+
+	weight_modifier = {
+		factor = @repatableTechFactor
+	}
+	
+	ai_weight = {
+		factor = 1.0
+	}
+
+	weight_groups = {
+		repeatable
+	}
+	mod_weight_if_group_picked = {
+		repeatable = 0.01
+	}
+	
+	modifier = {
+		oxr_mdlc_core_modifying_bonus_trait_points_add = 3
+		oxr_mdlc_core_modifying_bonus_trait_picks_add = 2
+	}
+}
